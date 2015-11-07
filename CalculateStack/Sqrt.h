@@ -8,6 +8,8 @@
 #ifndef SQRT_H_
 #define SQRT_H_
 
+#include <iostream>
+
 namespace Sine {
 
 /*
@@ -36,9 +38,12 @@ T Sqrt1(T _b, int _n, const T & _m) {
             tem = tem * _b;
         _b = _b - (tem * _b - src) / (T(_n) * tem);
         if ((tem * _b - src > T(0) && tem * _b - src < _m)
-                || (src - tem * _b > T(0) && src - tem * _b < _m))
+                || (src - tem * _b > T(0) && src - tem * _b < _m)) {
+            std::cout << t << "\n";
             return _b;
+        }
     }
+    throw;
     return _b;
 }
 

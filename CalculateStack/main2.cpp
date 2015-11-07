@@ -31,7 +31,7 @@ int chu(const int & a, const int & b) {
 using namespace std;
 
 int main() {
-    cout << Sine::Sqrt1(1000000000000000.0, 3, 1.0);
+    cout << Sine::Sqrt1(1000000000000000000.0, 3, 1000000000000.0);
     return 0;
     Sine::Calculator<int> t;
     Sine::Calculator<int>::AddFunction('+', &jia, 1);
