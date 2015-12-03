@@ -16,7 +16,7 @@ namespace Sine {
 
 template<class T, typename Comp>
 T *QuickSort(T *start, T *end, Comp func) {
-    T *mark = start, *s = start, *e = end - 1;
+    T *mark = start, *front = start, *back = end - 1;
     bool count0 = false, count1 = false;
     for (T *it = start; it < end; it++) {
         if ((*func)(*it, *mark))
@@ -32,28 +32,47 @@ T *QuickSort(T *start, T *end, Comp func) {
             if ((*func)(*mark, *src) ^ (*func)(*src, *mark))
                 break;
         if (mark >= end)
-            return s;
+            return front;
         T tem = *mark;
         *mark = *start;
         *start = tem;
         mark = start;
     }
     while (1) {
-        while (s < e && (*func)(*s, *mark))
-            s++;
-        while (s < e && !(*func)(*e, *mark))
-            e--;
-        if (s >= e)
+        while (front < back && (*func)(*front, *mark))
+            front++;
+        while (front < back && !(*func)(*back, *mark))
+            back--;
+        if (front >= back)
             break;
-        T tem = *s;
-        *s = *e;
-        *e = tem;
-        s++;
+        T tem = *front;
+        *front = *back;
+        *back = tem;
+        front++;
     }
-    assert(s == e);
-    QuickSort(start, s, func);
-    QuickSort(e, end, func);
-    return s;
+    QuickSort(start, front, func);
+    QuickSort(back, end, func);
+    return front;
+}
+
+template<class T, typename Comp>
+T *UnstableQuickSort(T *start, T *end, Comp func) {
+    T *mark = start, *front = start, *back = end - 1;
+    while (1) {
+        while (front < back && (*func)(*front, *mark))
+            front++;
+        while (front < back && !(*func)(*back, *mark))
+            back--;
+        if (front >= back)
+            break;
+        T tem = *front;
+        *front = *back;
+        *back = tem;
+        front++;
+    }
+    QuickSort(start, front, func);
+    QuickSort(back, end, func);
+    return front;
 }
 
 }

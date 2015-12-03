@@ -15,6 +15,7 @@
 
 using namespace Sine;
 
+#define string(s) #s
 #define test(sort, start, end, comp, type) {\
     type *tem = new type[end - start];\
     for (int i = 0; i < (end - start); i++)\
@@ -23,7 +24,7 @@ using namespace Sine;
     start_t = clock();\
     sort(tem, tem + (end - start), comp);\
     end_t = clock();\
-    printf("%d\n", int(end_t - start_t));\
+    printf("%30s:%5d ms\n", string(sort), int(end_t - start_t));\
     std::ofstream ofs("result.txt", std::ios::app);\
     for (int i = 0; i < (end - start); i++)\
         ofs << tem[i] << ' ';\
@@ -32,12 +33,12 @@ using namespace Sine;
     delete[] tem;\
 }
 
-    typedef int test_t;
+typedef int test_t;
 
 void writeRandInt(int n, test_t max);
 int readRan(test_t *s);
 
-#define SIZE 20000
+#define SIZE 400000
 
 bool comp(const test_t &a, const test_t &b) {
     return a < b;
@@ -45,22 +46,24 @@ bool comp(const test_t &a, const test_t &b) {
 
 int main() {
     int len;
-    test_t s[SIZE] = { };
+    test_t *s = new test_t[SIZE];
     int t = 1;
     bool foundError = false;
     while (t-- && !foundError) {
-    std::ofstream ofs("result.txt");  // clear
-    ofs.close();
-        writeRandInt(SIZE, 1);
+        std::ofstream ofs("result.txt");  // clear
+        ofs.close();
+        writeRandInt(SIZE, 1000);
         len = readRan(s);
 //        test(BubbleSort, s, s + len, comp, test_t);
-        test(HeapSort, s, s + len, comp, test_t);
+//        test(HeapSort, s, s + len, comp, test_t);
 //        test(InsertionSort, s, s + len, comp, test_t);
-        test(MergeSort, s, s + len, comp, test_t);
+//        test(MergeSort, s, s + len, comp, test_t);
         test(QuickSort, s, s + len, comp, test_t);
+        test(UnstableQuickSort, s, s + len, comp, test_t);
 //        test(SelectionSort, s, s + len, comp, test_t);
-        test(ShellSort, s, s + len, comp, test_t);
-        test(std::sort, s, s + len, comp, test_t);
+//        test(ShellSort, s, s + len, comp, test_t);
+//        test(std::sort, s, s + len, comp, test_t);
+//        test(std::stable_sort, s, s + len, comp, test_t);
 
         {  // standard generator
             std::sort(s, s + len, comp);
@@ -91,6 +94,7 @@ int main() {
             ifs.close();
         }
     }
+    delete[] s;
 }
 
 void writeRandInt(int n, test_t max) {
