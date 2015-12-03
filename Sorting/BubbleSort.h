@@ -14,7 +14,7 @@ template<class T, typename Comp>
 T *BubbleSort(T *start, T *end, Comp func) {
     for (T *it = end; it > start; it--)
         for (T *it2 = start + 1; it2 < it; it2++)
-            if ((*func)(*it2, *it2)) {
+            if ((*func)(*it2, *(it2 - 1))) {
                 T tem = *it2;
                 *it2 = *(it2 - 1);
                 *(it2 - 1) = tem;

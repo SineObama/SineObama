@@ -14,16 +14,14 @@ namespace Sine {
 
 template<class T, typename Comp>
 T *SelectionSort(T *start, T *end, Comp func) {
-    std::size_t len = end - start;
-    for (std::size_t i = 0; i < len - 1; i++) {
-        T *min = start + i;
-        for (std::size_t j = i + 1; j < len; j++) {
-            if ((*func)(start[j], *min))
-                min = start + j;
-        }
-        T tem = start[i];
-        start[i] = *min;
-        *min = tem;
+    for (T *it = start; it < end - 1; it++) {
+        T *fore = it;
+        for (T *it2 = it + 1; it2 < end; it2++)
+            if ((*func)(*it2, *fore))
+                fore = it2;
+        T tem = *it;
+        *it = *fore;
+        *fore = tem;
     }
     return start;
 }

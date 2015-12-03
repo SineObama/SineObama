@@ -16,51 +16,52 @@
 using namespace Sine;
 
 #define test(sort, start, end, comp, type) {\
-    std::size_t len = end - start;\
-    type *tem = new type[len];\
-    for (std::size_t i = 0; i < len; i++)\
+    type *tem = new type[end - start];\
+    for (int i = 0; i < (end - start); i++)\
         tem[i] = start[i];\
     clock_t start_t, end_t;\
     start_t = clock();\
-    sort(tem, tem + len, comp);\
+    sort(tem, tem + (end - start), comp);\
     end_t = clock();\
     printf("%d\n", int(end_t - start_t));\
     std::ofstream ofs("result.txt", std::ios::app);\
-    for (std::size_t i = 0; i < len; i++)\
+    for (int i = 0; i < (end - start); i++)\
         ofs << tem[i] << ' ';\
     ofs << '\n';\
     ofs.close();\
     delete[] tem;\
 }
-void writeRand(int n, int max);
-int readRan(int *s);
 
-#define SIZE 10000
+    typedef int test_t;
 
-bool comp(const int &a, const int &b) {
+void writeRandInt(int n, test_t max);
+int readRan(test_t *s);
+
+#define SIZE 20000
+
+bool comp(const test_t &a, const test_t &b) {
     return a < b;
 }
 
-#define sss(s) s aaa;
-
 int main() {
-    std::ofstream ofs("result.txt");  // clear
-    ofs.close();
-    typedef int test_t;
+    int len;
+    test_t s[SIZE] = { };
     int t = 1;
     bool foundError = false;
     while (t-- && !foundError) {
-        int s[SIZE] = { };
-        writeRand(SIZE, 100000);
-        int len = readRan(s);
-        test(BubbleSort, s, s + len, comp, test_t);
-//        test(HeapSort, s, s + len, comp);
-//        test(InsertionSort, s, s + len, comp);
-//        test(MergeSort, s, s + len, comp);
-//        test(QuickSort, s, s + len, comp);
-//        test(SelectionSort, s, s + len, comp);
-//        test(ShellSort, s, s + len, comp);
-//        test(std::sort, s, s + len, comp);
+    std::ofstream ofs("result.txt");  // clear
+    ofs.close();
+        writeRandInt(SIZE, 1);
+        len = readRan(s);
+//        test(BubbleSort, s, s + len, comp, test_t);
+        test(HeapSort, s, s + len, comp, test_t);
+//        test(InsertionSort, s, s + len, comp, test_t);
+        test(MergeSort, s, s + len, comp, test_t);
+        test(QuickSort, s, s + len, comp, test_t);
+//        test(SelectionSort, s, s + len, comp, test_t);
+        test(ShellSort, s, s + len, comp, test_t);
+        test(std::sort, s, s + len, comp, test_t);
+
         {  // standard generator
             std::sort(s, s + len, comp);
 //            BubbleSort(s, len, comp);
@@ -73,11 +74,11 @@ int main() {
 
         {  // checking
             std::ifstream ifs("result.txt");
-            for (int times = 0; times < 7; times++) {
+            for (std::size_t times = 0; times < 7; times++) {
                 int tem;
                 for (int i = 0; i < len; i++) {
                     ifs >> tem;
-                    if (ifs.eof())
+                    if (ifs.rdstate())
                         break;
                     if (tem != s[i]) {
                         std::cerr << times << ' ' << i << ' ' << tem << ' '
@@ -92,7 +93,7 @@ int main() {
     }
 }
 
-void writeRand(int n, int max) {
+void writeRandInt(int n, test_t max) {
     srand(time(NULL));
     std::ofstream ofs("test.txt");
     for (int i = 0; i < n; i++)
@@ -100,7 +101,7 @@ void writeRand(int n, int max) {
     ofs.close();
 }
 
-int readRan(int *s) {
+int readRan(test_t *s) {
     int len = -1;
     std::ifstream ifs("test.txt");
     while (ifs >> s[++len]) {
