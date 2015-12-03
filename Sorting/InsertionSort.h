@@ -11,20 +11,20 @@
 
 namespace Sine {
 
-template<class T>
-T *InsertionSort(T *s, std::size_t len, bool (*func)(const T &, const T &)) {
-    for (std::size_t i = 1; i < len; i++) {
-        for (std::size_t j = i; j > 0; j--) {
-            if ((*func)(s[j], s[j - 1])) {
-                T tem = s[j];
-                s[j] = s[j - 1];
-                s[j - 1] = tem;
+template<class T, typename Comp>
+T *InsertionSort(T *start, T *end, Comp func) {
+    for (T *it = start + 1; it < end; it++) {
+        for (T *it2 = it; it2 > start; it2--) {
+            if ((*func)(*it2, *(it2 - 1))) {
+                T tem = *it2;
+                *it2 = *(it2 - 1);
+                *(it2 - 1) = tem;
             } else {
                 break;
             }
         }
     }
-    return s;
+    return start;
 }
 
 }

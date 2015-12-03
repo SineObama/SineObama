@@ -12,19 +12,20 @@
 
 namespace Sine {
 
-template<class T>
-T *SelectionSort(T *s, std::size_t len, bool (*func)(const T &, const T &)) {
+template<class T, typename Comp>
+T *SelectionSort(T *start, T *end, Comp func) {
+    std::size_t len = end - start;
     for (std::size_t i = 0; i < len - 1; i++) {
-        T *min = s + i;
+        T *min = start + i;
         for (std::size_t j = i + 1; j < len; j++) {
-            if ((*func)(s[j], *min))
-                min = s + j;
+            if ((*func)(start[j], *min))
+                min = start + j;
         }
-        T tem = s[i];
-        s[i] = *min;
+        T tem = start[i];
+        start[i] = *min;
         *min = tem;
     }
-    return s;
+    return start;
 }
 
 }

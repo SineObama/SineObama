@@ -7,6 +7,7 @@
 
 #include <cstdio>
 #include <iostream>
+#include <cassert>
 
 #ifndef QUICKSORT_H_
 #define QUICKSORT_H_
@@ -14,51 +15,44 @@
 namespace Sine {
 
 template<class T, typename Comp>
-T *QuickSort(T *s, std::size_t len, Comp func) {
-    T *mark = s, *start = s + 1, *end = s + len - 1;
-//    for (int i = 0; i < len; i++)
-//        printf("%d ", s[i]);
-//    printf("in\n");
-    std::size_t count0 = 0, count1 = 0;
-    for (std::size_t i = 0; i < len; i++) {
-        if ((*func)(s[i], *mark))
-            count1++;
+T *QuickSort(T *start, T *end, Comp func) {
+    T *mark = start, *s = start, *e = end - 1;
+    bool count0 = false, count1 = false;
+    for (T *it = start; it < end; it++) {
+        if ((*func)(*it, *mark))
+            count1 = true;
         else
-            count0++;
+            count0 = true;
         if (count0 && count1)
             break;
     }
     if (!count0 || !count1) {
         T *src = mark;
-        while (++mark < s + len)
+        while (++mark < end)
             if ((*func)(*mark, *src) ^ (*func)(*src, *mark))
                 break;
-        if (mark >= s + len)
+        if (mark >= end)
             return s;
         T tem = *mark;
-        *mark = *s;
-        *s = tem;
-        mark = s;
+        *mark = *start;
+        *start = tem;
+        mark = start;
     }
     while (1) {
-        while (start < end && (*func)(*start, *mark))
-            start++;
-        while (start < end && !(*func)(*end, *mark))
-            end--;
-        if (start >= end)
+        while (s < e && (*func)(*s, *mark))
+            s++;
+        while (s < e && !(*func)(*e, *mark))
+            e--;
+        if (s >= e)
             break;
-        T tem = *start;
-        *start = *end;
-        *end = tem;
-        start++;
+        T tem = *s;
+        *s = *e;
+        *e = tem;
+        s++;
     }
-    std::size_t len1 = start - s;
-    std::size_t len2 = len - len1;
-        QuickSort(s, len1, func);
-        QuickSort(s + len1, len2, func);
-//    for (int i = 0; i < len; i++)
-//        printf("%d ", s[i]);
-//    printf("out\n");
+    assert(s == e);
+    QuickSort(start, s, func);
+    QuickSort(e, end, func);
     return s;
 }
 
