@@ -25,8 +25,8 @@ int main() {
     for (int i = 0; i < SIZE; i++)
         tree2.insert(rand(), false);
     nonRecursive();
-    printf("%d\n", recursive.getTime());
+    printf("%d\n", recursive.get());
 //    tree.inorder(visit);
-    printf("\n%d\n", nonRecursive.getTime());
+    printf("\n%d\n", nonRecursive.get());
 //    tree2.inorder(visit);
 }

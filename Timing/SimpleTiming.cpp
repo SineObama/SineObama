@@ -11,7 +11,7 @@
 namespace Sine {
 
 SimpleTiming::SimpleTiming() {
-    newTime = oldTime = 0;
+    newTime = oldTime = -1;
 }
 
 void SimpleTiming::operator()() {
@@ -20,7 +20,7 @@ void SimpleTiming::operator()() {
 }
 
 int SimpleTiming::get() {
-    if (!oldTime)
+    if (oldTime == -1)
         return 0;
     return int(newTime - oldTime);
 }
