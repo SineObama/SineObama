@@ -45,18 +45,17 @@ class RedBlackTree {
 
  protected:
 
-    void recursivePreorder(NodePtr, void (*)(Entry *));
-    void recursiveInorder(NodePtr, void (*)(Entry *));
-    void recursivePostorder(NodePtr, void (*)(Entry *));
+    static void recursivePreorder(NodePtr, void (*)(Entry *));
+    static void recursiveInorder(NodePtr, void (*)(Entry *));
+    static void recursivePostorder(NodePtr, void (*)(Entry *));
 
     bool recursiveInsert(const Entry &);
-    bool insertToNodeAndFix(NodePtr &, const Entry &);
-
     bool nonRecursiveInsert(const Entry &);
 
-    NodePtr rotate(NodePtr, int);
-
  private:
+
+    static NodePtr rotate(NodePtr, int);
+    static bool insertToNodeAndFix(NodePtr &, const Entry &);
 
     NodePtr root;
 

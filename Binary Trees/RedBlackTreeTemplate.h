@@ -94,47 +94,11 @@ void RedBlackTree<Entry>::recursivePostorder(NodePtr x,
 }
 
 template<class Entry>
-typename RedBlackTree<Entry>::NodePtr RedBlackTree<Entry>::rotate(
-        NodePtr parent, int parentNum) {
-    NodePtr newParent, cur = parent->child[parentNum];
-    if (cur->child[1 - parentNum]) {
-        newParent = cur->child[1 - parentNum];
-        cur->child[1 - parentNum] = newParent->child[parentNum];
-        newParent->child[parentNum] = cur;
-    } else {
-        newParent = cur;
-    }
-    parent->child[parentNum] = newParent->child[1 - parentNum];
-    newParent->child[1 - parentNum] = parent;
-    return newParent;
-}
-
-template<class Entry>
 bool RedBlackTree<Entry>::recursiveInsert(const Entry &x) {
     if (!insertToNodeAndFix(root, x))
         return false;
     root->color = black;
     return true;
-}
-
-template<class Entry>
-bool RedBlackTree<Entry>::insertToNodeAndFix(NodePtr &node, const Entry &x) {
-    if (!node) {
-        node = new Node(x, red);
-        return true;
-    }
-    if (node->data == x)
-        return false;
-    // divide to smaller problem
-    if (node->data < x) {
-        if (!insertToNodeAndFix(node->right, x))
-            return false;
-    } else {
-        if (!insertToNodeAndFix(node->left, x))
-            return false;
-    }
-    // fix
-
 }
 
 template<class Entry>
@@ -173,13 +137,13 @@ bool RedBlackTree<Entry>::nonRecursiveInsert(const Entry &x) {
             numStack.pop();
             NodePtr brother = parent->child[1 - parentNum];
             if (brother == NULL || brother->color == black) {
-                NodePtr newParent = rotate(parent, parentNum);
                 parent->color = red;
-                newParent->color = black;
+                parent = rotate(parent, parentNum);
+                parent->color = black;
                 if (ptrStack.empty())
-                    root = newParent;
+                    root = parent;
                 else
-                    ptrStack.top()->child[numStack.top()] = newParent;
+                    ptrStack.top()->child[numStack.top()] = parent;
                 break;
             } else {  // brother->color == red
                 parent->color = red;
@@ -193,6 +157,55 @@ bool RedBlackTree<Entry>::nonRecursiveInsert(const Entry &x) {
         }
     }
     root->color = black;
+    return true;
+}
+
+template<class Entry>
+typename RedBlackTree<Entry>::NodePtr RedBlackTree<Entry>::rotate(
+        NodePtr parent, int parentNum) {
+    NodePtr newParent, cur = parent->child[parentNum];
+    if (cur->child[1 - parentNum]) {
+        newParent = cur->child[1 - parentNum];
+        cur->child[1 - parentNum] = newParent->child[parentNum];
+        newParent->child[parentNum] = cur;
+    } else {
+        newParent = cur;
+    }
+    parent->child[parentNum] = newParent->child[1 - parentNum];
+    newParent->child[1 - parentNum] = parent;
+    return newParent;
+}
+
+template<class Entry>
+bool RedBlackTree<Entry>::insertToNodeAndFix(NodePtr &parent, const Entry &x) {
+    if (!parent) {
+        parent = new Node(x, red);
+        return true;
+    }
+    if (parent->data == x)
+        return false;
+    // divide into smaller problem
+    int parentNum = parent->data < x;
+    if (!insertToNodeAndFix(parent->child[parentNum], x))
+        return false;
+    NodePtr cur = parent->child[parentNum], leftChild = cur->child[0],
+            rightChild = cur->child[1];
+    // fix
+    if (cur->color == red) {
+        if ((leftChild && leftChild->color == red)
+                || (rightChild && rightChild->color == red)) {
+            NodePtr brother = parent->child[1 - parentNum];
+            if (brother == NULL || brother->color == black) {
+                parent->color = red;
+                parent = rotate(parent, parentNum);
+                parent->color = black;
+            } else {  // brother->color == red
+                parent->color = red;
+                brother->color = black;
+                cur->color = black;
+            }
+        }
+    }
     return true;
 }
 
