@@ -35,7 +35,7 @@ class RedBlackTree {
     RedBlackTree();
     ~RedBlackTree();
 
-    bool insert(const Entry &);
+    bool insert(const Entry &, bool recursive = true);
     bool remove(const Entry &);
     void clear();
 
@@ -48,6 +48,11 @@ class RedBlackTree {
     void recursivePreorder(NodePtr, void (*)(Entry *));
     void recursiveInorder(NodePtr, void (*)(Entry *));
     void recursivePostorder(NodePtr, void (*)(Entry *));
+
+    bool recursiveInsert(const Entry &);
+    bool insertToNodeAndFix(NodePtr &, const Entry &);
+
+    bool nonRecursiveInsert(const Entry &);
 
     NodePtr rotate(NodePtr, int);
 
