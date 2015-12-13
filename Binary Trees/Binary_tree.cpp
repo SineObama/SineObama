@@ -46,6 +46,7 @@ void Binary_tree<Entry>::postorder(void (*visit)(Entry *)) {
 template<class Entry>
 int Binary_tree<Entry>::size() const {
 // todo
+    return 0;
 }
 
 template<class Entry>
@@ -62,6 +63,7 @@ void Binary_tree<Entry>::clear() {
 template<class Entry>
 int Binary_tree<Entry>::height() const {
 // todo
+    return 0;
 }
 
 template<class Entry>
@@ -75,9 +77,11 @@ Binary_tree<Entry>::Binary_tree(const Binary_tree<Entry> &t) {
 }
 
 template<class Entry>
-Binary_tree &Binary_tree<Entry>::operator=(const Binary_tree<Entry> &t) {
+Binary_tree<Entry> &Binary_tree<Entry>::operator=(const Binary_tree<Entry> &t) {
     clear();
+    root = new Binary_node<Entry>;
     copy_node_and_subtree(&root, t.root);
+    return this;
 }
 
 template<class Entry>
@@ -124,7 +128,7 @@ void Binary_tree<Entry>::copy_node_and_subtree(Binary_node<Entry> **p,
         copy_node_and_subtree((*p)->left, x->left);
     }
     if (x->right) {
-        (*p)->lright = new Binary_node<Entry>;
+        (*p)->right = new Binary_node<Entry>;
         copy_node_and_subtree((*p)->right, x->right);
     }
 }
