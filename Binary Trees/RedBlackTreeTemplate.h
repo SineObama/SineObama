@@ -42,8 +42,10 @@ bool RedBlackTree<Entry>::insert(const Entry &x, bool recursive) {
 }
 
 template<class Entry>
-bool RedBlackTree<Entry>::remove(const Entry &x) {
-    return true;
+bool RedBlackTree<Entry>::remove(const Entry &x, bool recursive) {
+    if (recursive)
+        return recursiveRemove(x);
+    return nonRecursiveRemove(x);
 }
 
 template<class Entry>
@@ -161,6 +163,19 @@ bool RedBlackTree<Entry>::nonRecursiveInsert(const Entry &x) {
 }
 
 template<class Entry>
+bool RedBlackTree<Entry>::recursiveRemove(const Entry &x) {
+    if (!removeFromNodeAndFix(root, x))
+        return false;
+    root->color = black;
+    return true;
+}
+
+template<class Entry>
+bool RedBlackTree<Entry>::nonRecursiveRemove(const Entry &x) {
+    return false;
+}
+
+template<class Entry>
 typename RedBlackTree<Entry>::NodePtr RedBlackTree<Entry>::rotate(
         NodePtr parent, int parentNum) {
     NodePtr newParent, cur = parent->child[parentNum];
@@ -188,9 +203,9 @@ bool RedBlackTree<Entry>::insertToNodeAndFix(NodePtr &parent, const Entry &x) {
     int parentNum = parent->data < x;
     if (!insertToNodeAndFix(parent->child[parentNum], x))
         return false;
+    // fix
     NodePtr cur = parent->child[parentNum], leftChild = cur->child[0],
             rightChild = cur->child[1];
-    // fix
     if (cur->color == red) {
         if ((leftChild && leftChild->color == red)
                 || (rightChild && rightChild->color == red)) {
@@ -207,6 +222,19 @@ bool RedBlackTree<Entry>::insertToNodeAndFix(NodePtr &parent, const Entry &x) {
         }
     }
     return true;
+}
+
+template<class Entry>
+bool RedBlackTree<Entry>::removeFromNodeAndFix(NodePtr &parent, const Entry &x) {
+    if (!parent)
+        return false;
+    if (parent->data == x) {
+
+        return true;
+    }
+    int parentNum = parent->data < x;
+    if (!removeFromNodeAndFix(parent->child[parentNum], x))
+        return false;
 }
 
 }

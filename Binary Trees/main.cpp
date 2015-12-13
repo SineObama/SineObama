@@ -6,18 +6,27 @@
  */
 
 #include "RedBlackTree.h"
+#include "SimpleTiming.h"
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
 
+#define SIZE 100000
+
 int main() {
     srand(time(NULL));
-    Sine::RedBlackTree<int> tree;
-    int count = 0;
-    for (int i = 0; i < 5000; i++) {
-        if (tree.insert(rand()))
-            count++;
-    }
-    printf("%d\n", count);
-    tree.inorder(visit);
+    Sine::RedBlackTree<int> tree, tree2;
+    Sine::SimpleTiming recursive, nonRecursive;
+    recursive();
+    for (int i = 0; i < SIZE; i++)
+        tree.insert(rand());
+    recursive();
+    nonRecursive();
+    for (int i = 0; i < SIZE; i++)
+        tree2.insert(rand(), false);
+    nonRecursive();
+    printf("%d\n", recursive.getTime());
+//    tree.inorder(visit);
+    printf("\n%d\n", nonRecursive.getTime());
+//    tree2.inorder(visit);
 }
