@@ -21,7 +21,7 @@ struct RedBlackTreeNode {
 //    RedBlackTreeNode<Entry> *parent;
     RedBlackTreeNode<Entry> *child[2];  // child[0] for left child, child[1] for right child
     RedBlackColor color;
-    RedBlackTreeNode(const Entry &, RedBlackColor = red);
+    RedBlackTreeNode(const Entry &, RedBlackColor);
 };
 
 template<class Entry>
@@ -45,9 +45,11 @@ class RedBlackTree {
 
  protected:
 
-    void recursive_preorder(NodePtr, void (*)(Entry *));
-    void recursive_inorder(NodePtr, void (*)(Entry *));
-    void recursive_postorder(NodePtr, void (*)(Entry *));
+    void recursivePreorder(NodePtr, void (*)(Entry *));
+    void recursiveInorder(NodePtr, void (*)(Entry *));
+    void recursivePostorder(NodePtr, void (*)(Entry *));
+
+    NodePtr rotate(NodePtr, int);
 
  private:
 

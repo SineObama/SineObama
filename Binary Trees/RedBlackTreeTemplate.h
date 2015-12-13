@@ -42,6 +42,8 @@ bool RedBlackTree<Entry>::insert(const Entry &x) {
         root = new Node(x, black);
         return true;
     }
+
+    // insert and record the path
     std::stack<NodePtr> ptrStack;
     std::stack<short> numStack;
     NodePtr cur = root;
@@ -55,6 +57,9 @@ bool RedBlackTree<Entry>::insert(const Entry &x) {
     }
     NodePtr newNode = new Node(x, red);
     ptrStack.top()->child[numStack.top()] = newNode;
+
+    // fix the tree
+    // the number of black node is always guaranteed, to fix the continuous red
     while (!ptrStack.empty()) {
         cur = ptrStack.top();
         short num = numStack.top();
@@ -67,16 +72,7 @@ bool RedBlackTree<Entry>::insert(const Entry &x) {
             numStack.pop();
             NodePtr brother = parent->child[1 - parentNum];
             if (brother == NULL || brother->color == black) {
-                NodePtr newParent = NULL;
-                if (cur->child[1 - parentNum]) {
-                    newParent = cur->child[1 - parentNum];
-                    cur->child[1 - parentNum] = newParent->child[parentNum];
-                    newParent->child[parentNum] = cur;
-                } else {
-                    newParent = cur;
-                }
-                parent->child[parentNum] = newParent->child[1 - parentNum];
-                newParent->child[1 - parentNum] = parent;
+                NodePtr newParent = rotate(parent, parentNum);
                 parent->color = red;
                 newParent->color = black;
                 if (ptrStack.empty())
@@ -110,46 +106,61 @@ void RedBlackTree<Entry>::clear() {
 
 template<class Entry>
 void RedBlackTree<Entry>::preorder(void (*visit)(Entry *)) {
-    recursive_preorder(root, visit);
+    recursivePreorder(root, visit);
 }
 
 template<class Entry>
 void RedBlackTree<Entry>::inorder(void (*visit)(Entry *)) {
-    recursive_inorder(root, visit);
+    recursiveInorder(root, visit);
 }
 
 template<class Entry>
 void RedBlackTree<Entry>::postorder(void (*visit)(Entry *)) {
-    recursive_postorder(root, visit);
+    recursivePostorder(root, visit);
 }
 
 template<class Entry>
-void RedBlackTree<Entry>::recursive_preorder(NodePtr x,
+void RedBlackTree<Entry>::recursivePreorder(NodePtr x,
                                              void (*visit)(Entry *)) {
     if (x == NULL)
         return;
     (*visit)(&x->data);
-    recursive_preorder(x->child[0], visit);
-    recursive_preorder(x->child[1], visit);
+    recursivePreorder(x->child[0], visit);
+    recursivePreorder(x->child[1], visit);
 }
 
 template<class Entry>
-void RedBlackTree<Entry>::recursive_inorder(NodePtr x, void (*visit)(Entry *)) {
+void RedBlackTree<Entry>::recursiveInorder(NodePtr x, void (*visit)(Entry *)) {
     if (x == NULL)
         return;
-    recursive_inorder(x->child[0], visit);
+    recursiveInorder(x->child[0], visit);
     (*visit)(&x->data);
-    recursive_inorder(x->child[1], visit);
+    recursiveInorder(x->child[1], visit);
 }
 
 template<class Entry>
-void RedBlackTree<Entry>::recursive_postorder(NodePtr x,
+void RedBlackTree<Entry>::recursivePostorder(NodePtr x,
                                               void (*visit)(Entry *)) {
     if (x == NULL)
         return;
-    recursive_postorder(x->child[0], visit);
-    recursive_postorder(x->child[1], visit);
+    recursivePostorder(x->child[0], visit);
+    recursivePostorder(x->child[1], visit);
     (*visit)(&x->data);
+}
+
+template<class Entry>
+typename RedBlackTree<Entry>::NodePtr RedBlackTree<Entry>::rotate(NodePtr parent, int parentNum) {
+    NodePtr newParent, cur = parent->child[parentNum];
+    if (cur->child[1 - parentNum]) {
+        newParent = cur->child[1 - parentNum];
+        cur->child[1 - parentNum] = newParent->child[parentNum];
+        newParent->child[parentNum] = cur;
+    } else {
+        newParent = cur;
+    }
+    parent->child[parentNum] = newParent->child[1 - parentNum];
+    newParent->child[1 - parentNum] = parent;
+    return newParent;
 }
 
 }
