@@ -55,9 +55,12 @@ class RedBlackTree {
     bool recursiveRemove(const Entry &);
     bool nonRecursiveRemove(const Entry &);
 
+    void fixRedTheory(NodePtr);
+
  private:
 
-    static NodePtr rotate(NodePtr, int);
+    static NodePtr rotateForInsert(NodePtr, int, int);
+    static bool rotate(NodePtr &, int);
     static bool insertToNodeAndFix(NodePtr &, const Entry &);
     static bool removeFromNodeAndFix(NodePtr &, const Entry &);
 

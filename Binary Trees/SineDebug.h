@@ -27,7 +27,7 @@ void i_am_stupid(int very_much = debug_step);
 #define dp(s) lf_; std::cerr << (s) << ' ';
 #define ds lf_; std::cerr << (debug_step++);
 #define dn std::cerr << std::endl
-#define dc(expression, s) if(expression) {dp(s); }
+#define dc(expression, s) if(!(expression)) {dp(#expression);dp("fail");dp(s); }
 #ifndef NSHOWFILE
 #define lf_ std::cerr << "at " << __LINE__ << " " << __FUNCTION__ << ": "
 #else
