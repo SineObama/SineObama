@@ -32,7 +32,7 @@ T *QuickSort(T *start, T *end, Comp func) {
             if ((*func)(*mark, *src) ^ (*func)(*src, *mark))
                 break;
         if (mark >= end)
-            return front;
+            return start;
         T tem = *mark;
         *mark = *start;
         *start = tem;
@@ -52,16 +52,16 @@ T *QuickSort(T *start, T *end, Comp func) {
     }
     QuickSort(start, front, func);
     QuickSort(back, end, func);
-    return front;
+    return start;
 }
 
 template<class T, typename Comp>
-T *UnstableQuickSort(T *start, T *end, Comp func) {
-    T *mark = start, *front = start, *back = end - 1;
+T *QuickSort2(T *start, T *end, Comp func) {
+    T *front = start + 1, *back = end - 1;
     while (1) {
-        while (front < back && (*func)(*front, *mark))
+        while (front < back && (*func)(*front, *start))
             front++;
-        while (front < back && !(*func)(*back, *mark))
+        while (front < back && !(*func)(*back, *start))
             back--;
         if (front >= back)
             break;
@@ -70,9 +70,58 @@ T *UnstableQuickSort(T *start, T *end, Comp func) {
         *back = tem;
         front++;
     }
-    QuickSort(start, front, func);
-    QuickSort(back, end, func);
-    return front;
+    if (front == end - 1) {
+        T tem = *front;
+        *front = *start;
+        *start = tem;
+    }
+    if (start + 1 < front)
+        QuickSort(start, front, func);
+    if (front + 1 < end)
+        QuickSort(front, end, func);
+    return start;
+}
+
+template<class T, typename Comp>
+void QuickSort3(T *start, T *end, Comp func) {
+    T *front = start, *back = end - 1, *mark = start;
+    if ((*func)(*back, *start)) {
+        T tem = *back;
+        *back = *start;
+        *start = tem;
+    }
+    while (1) {
+        for (; back > mark; back--) {
+            if ((*func)(*back, *mark)) {
+                T tmp = *back;
+                *back = *mark;
+                *mark = tmp;
+                mark = back;
+                back--;
+                break;
+            }
+        }
+        if (mark >= front)
+            break;
+        for (; front < mark; front++) {
+            if ((*func)(*front, *mark)) {
+                T tmp = *front;
+                *front = *mark;
+                *mark = tmp;
+                mark = front;
+                front++;
+                break;
+            }
+        }
+        if (mark <= back)
+            break;
+    }
+    if (front == start)
+        front++;
+    if (start + 1 < front)
+        QuickSort3(start, front, func);
+    if (front + 1 < end)
+        QuickSort3(front, end, func);
 }
 
 }

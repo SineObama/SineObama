@@ -41,7 +41,7 @@ int readRan(test_t *s);
 #define SIZE 400000
 
 bool comp(const test_t &a, const test_t &b) {
-    return a < b;
+    return a <= b;
 }
 
 int main() {
@@ -52,22 +52,23 @@ int main() {
     while (t-- && !foundError) {
         std::ofstream ofs("result.txt");  // clear
         ofs.close();
-        writeRandInt(SIZE, 1000);
+        writeRandInt(SIZE, 20000);
         len = readRan(s);
 //        test(BubbleSort, s, s + len, comp, test_t);
 //        test(HeapSort, s, s + len, comp, test_t);
 //        test(InsertionSort, s, s + len, comp, test_t);
 //        test(MergeSort, s, s + len, comp, test_t);
         test(QuickSort, s, s + len, comp, test_t);
-        test(UnstableQuickSort, s, s + len, comp, test_t);
+        test(QuickSort2, s, s + len, comp, test_t);
+//        test(QuickSort3, s, s + len, comp, test_t);
 //        test(SelectionSort, s, s + len, comp, test_t);
 //        test(ShellSort, s, s + len, comp, test_t);
 //        test(std::sort, s, s + len, comp, test_t);
 //        test(std::stable_sort, s, s + len, comp, test_t);
 
         {  // standard generator
-            std::sort(s, s + len, comp);
-//            BubbleSort(s, len, comp);
+//            std::sort(s, s + len, comp);
+            ShellSort(s, s + len, comp);
             std::ofstream ofs("standard.txt");
             for (int i = 0; i < len; i++)
                 ofs << s[i] << ' ';
@@ -90,6 +91,8 @@ int main() {
                         break;
                     }
                 }
+                if (foundError)
+                    break;
             }
             ifs.close();
         }
