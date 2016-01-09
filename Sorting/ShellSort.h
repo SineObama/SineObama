@@ -15,9 +15,9 @@ namespace Sine {
 template<class T, typename Comp>
 T *ShellSort(T *start, T *end, Comp func) {
     std::size_t len = end - start;
-    std::size_t number[50] = {0, 1}, max = 2;
+    std::size_t number[50] = { 0, 1 }, max = 2;
     while (number[max - 1] * 4 < len) {
-        number[max] = number[max - 1] * 3 - 1;
+        number[max] = int(number[max - 1] * 3.5 - 1);
         max++;
     }
     for (std::size_t index = max - 1; index > 0; index--) {
@@ -32,6 +32,28 @@ T *ShellSort(T *start, T *end, Comp func) {
             }
         }
     }
+    return start;
+}
+
+template<class T, typename Comp>
+void ShellSort1_help(T *start, int len, int far, Comp func) {
+    if (far * 14 < len)
+        ShellSort1_help(start, len, far * 3.5 - 1, func);
+    for (int j = far; j < len; j++) {
+        int k = j;
+        while (k >= far && (*func)(start[k], start[k - far])) {
+            T tem = start[k];
+            start[k] = start[k - far];
+            k -= far;
+            start[k] = tem;
+        }
+    }
+}
+
+template<class T, typename Comp>
+T *ShellSort1(T *start, T *end, Comp func) {
+    std::size_t len = end - start;
+    ShellSort1_help(start, len, 1, func);
     return start;
 }
 

@@ -38,7 +38,7 @@ typedef int test_t;
 void writeRandInt(int n, test_t max);
 int readRan(test_t *s);
 
-#define SIZE 400000
+#define SIZE 200000
 
 bool comp(const test_t &a, const test_t &b) {
     return a <= b;
@@ -52,19 +52,23 @@ int main() {
     while (t-- && !foundError) {
         std::ofstream ofs("result.txt");  // clear
         ofs.close();
-        writeRandInt(SIZE, 20000);
+        writeRandInt(SIZE, 200000);
         len = readRan(s);
 //        test(BubbleSort, s, s + len, comp, test_t);
 //        test(HeapSort, s, s + len, comp, test_t);
 //        test(InsertionSort, s, s + len, comp, test_t);
 //        test(MergeSort, s, s + len, comp, test_t);
         test(QuickSort, s, s + len, comp, test_t);
-        test(QuickSort2, s, s + len, comp, test_t);
-//        test(QuickSort3, s, s + len, comp, test_t);
+        test(QuickSort1, s, s + len, comp, test_t);
+        test(QuickSortStandard, s, s + len, comp, test_t);
+//        test(QuickSort1_1, s, s + len, comp, test_t);
+//        test(QuickSort1_2, s, s + len, comp, test_t);
+//        test(QuickSort2, s, s + len, comp, test_t);
 //        test(SelectionSort, s, s + len, comp, test_t);
 //        test(ShellSort, s, s + len, comp, test_t);
-//        test(std::sort, s, s + len, comp, test_t);
-//        test(std::stable_sort, s, s + len, comp, test_t);
+//        test(ShellSort1, s, s + len, comp, test_t);
+        test(std::sort, s, s + len, comp, test_t);
+        test(std::stable_sort, s, s + len, comp, test_t);
 
         {  // standard generator
 //            std::sort(s, s + len, comp);
@@ -105,6 +109,7 @@ void writeRandInt(int n, test_t max) {
     std::ofstream ofs("test.txt");
     for (int i = 0; i < n; i++)
         ofs << rand() % max << ' ';
+//        ofs << (n - i) << ' ';
     ofs.close();
 }
 

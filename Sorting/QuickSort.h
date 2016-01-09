@@ -8,6 +8,8 @@
 #include <cstdio>
 #include <iostream>
 #include <cassert>
+#include <cmath>
+#include <cstdlib>
 
 #ifndef QUICKSORT_H_
 #define QUICKSORT_H_
@@ -50,13 +52,15 @@ T *QuickSort(T *start, T *end, Comp func) {
         *back = tem;
         front++;
     }
-    QuickSort(start, front, func);
-    QuickSort(back, end, func);
+    if (start + 1 < front)
+        QuickSort(start, front, func);
+    if (front + 1 < end)
+        QuickSort(front, end, func);
     return start;
 }
 
 template<class T, typename Comp>
-T *QuickSort2(T *start, T *end, Comp func) {
+T *QuickSort1(T *start, T *end, Comp func) {
     T *front = start + 1, *back = end - 1;
     while (1) {
         while (front < back && (*func)(*front, *start))
@@ -70,41 +74,61 @@ T *QuickSort2(T *start, T *end, Comp func) {
         *back = tem;
         front++;
     }
-    if (front == end - 1) {
+    if (front == end - 1 && (*func)(*front, *start)) {
         T tem = *front;
         *front = *start;
         *start = tem;
     }
     if (start + 1 < front)
-        QuickSort(start, front, func);
+        QuickSort1(start, front, func);
     if (front + 1 < end)
-        QuickSort(front, end, func);
+        QuickSort1(front, end, func);
+    return start;
+}
+
+/* random access form of QuickSort1 */
+template<class T, typename Comp>
+T *QuickSort1_1(T *start, T *end, Comp func) {
+    int n = end - start, i = 1, j = n - 1;
+    while (1) {
+        while (i < j && (*func)(start[i], start[0]))
+            i++;
+        while (i < j && !(*func)(start[j], start[0]))
+            j--;
+        if (i >= j)
+            break;
+        T tem = start[i];
+        start[i] = start[j];
+        start[j] = tem;
+        i++;
+    }
+    if (i == n - 1 && (*func)(start[i], start[0])) {
+        T tem = start[i];
+        start[i] = start[0];
+        start[0] = tem;
+    }
+    if (1 < i)
+        QuickSort1_1(start, start + i, func);
+    if (i + 1 < n)
+        QuickSort1_1(start + i, end, func);
     return start;
 }
 
 template<class T, typename Comp>
-void QuickSort3(T *start, T *end, Comp func) {
-    T *front = start, *back = end - 1, *mark = start;
-    if ((*func)(*back, *start)) {
-        T tem = *back;
-        *back = *start;
-        *start = tem;
-    }
-    while (1) {
-        for (; back > mark; back--) {
+void QuickSort2(T *start, T *end, Comp func) {
+    T *front = start + 1, *back = end - 1, *mark = start;
+    while (front < back) {
+        for (; front < back; back--) {
             if ((*func)(*back, *mark)) {
                 T tmp = *back;
                 *back = *mark;
                 *mark = tmp;
                 mark = back;
-                back--;
                 break;
             }
         }
-        if (mark >= front)
-            break;
-        for (; front < mark; front++) {
-            if ((*func)(*front, *mark)) {
+        for (; front < back; front++) {
+            if (!(*func)(*front, *mark)) {
                 T tmp = *front;
                 *front = *mark;
                 *mark = tmp;
@@ -113,15 +137,69 @@ void QuickSort3(T *start, T *end, Comp func) {
                 break;
             }
         }
-        if (mark <= back)
-            break;
     }
-    if (front == start)
-        front++;
+    if (front > mark && (*func)(*front, *mark)) {
+        T tem = *front;
+        *front = *mark;
+        *mark = tem;
+    }
     if (start + 1 < front)
-        QuickSort3(start, front, func);
+        QuickSort2(start, front, func);
     if (front + 1 < end)
-        QuickSort3(front, end, func);
+        QuickSort2(front, end, func);
+}
+
+template<class T, typename Comp>
+void QuickSortStandard(T *start, T *end, Comp func) {
+    if (start + 1 >= end)
+        return;
+    T *x = end - 1, *i = start;
+    for (T *j = start; j < end - 1; j++)
+        if ((*func)(*j, *x)) {
+            T tem = *j;
+            *j = *i;
+            *i++ = tem;
+        }
+    T tem = *x;
+    *x = *i;
+    *i = tem;
+    QuickSortStandard(start, i, func);
+    QuickSortStandard(i + 1, end, func);
+}
+
+/* try something random, based on standard*/
+template<class T, typename Comp>
+void QuickSort3(T *start, T *end, Comp func) {
+    if (start + 1 >= end)
+        return;
+    T *x = end - 1, *i = start;
+    if (end - start > 10) {
+        T **hehe = new T*[3];
+        for (int i = 0; i < 3; i++)
+            hehe[i] = start + (end - start) / 5 * (i + 1);
+        for (int i = 0; i < 2; i++)
+            for (int j = i + 1; j < 3; j++)
+                if ((*func)(*hehe[i], *hehe[j])) {
+                    T *tem = hehe[i];
+                    hehe[i] = hehe[j];
+                    hehe[j] = tem;
+                }
+        T t = *hehe[1];
+        *hehe[1] = *x;
+        *x = t;
+        delete[] hehe;
+    }
+    for (T *j = start; j < end - 1; j++)
+        if ((*func)(*j, *x)) {
+            T tem = *j;
+            *j = *i;
+            *i++ = tem;
+        }
+    T tem = *x;
+    *x = *i;
+    *i = tem;
+    QuickSortStandard1(start, i, func);
+    QuickSortStandard1(i + 1, end, func);
 }
 
 }
