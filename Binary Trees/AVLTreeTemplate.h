@@ -261,8 +261,6 @@ void AVLTree<T>::fixAfterRemove(Node *&node, int source, int num) {
     // ÐèÒªÐý×ª
     if (another->BF == -symbol)
         rotate(another, symbol == -1);
-//    if (next->BF == -symbol)
-//        rotate(next, symbol == -1);
     rotate(node, symbol == 1);
 }
 
