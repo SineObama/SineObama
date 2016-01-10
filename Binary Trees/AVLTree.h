@@ -40,17 +40,17 @@ class AVLTree {
     void recursiveInorder(Node *, void (*)(const T &)) const;
     static bool fixNode(Node *&);
  private:
-    static bool insertToNode(Node *&, const T &);
-    static bool removeFromNode(Node *&, const T &);
+    static bool insertToTree(Node *&, const T &);
+    static bool removeFromTree(Node *&, const T &);
     static Node *removeTheBiggest(Node *&);
-    static const Node *searchInNode(const Node *, const T &);
+    static const Node *searchInTree(const Node *, const T &);
     static bool rotate(Node *&, bool left);
     static void inorderPrint(std::vector<std::stringstream *> &, Node *, int);
     static int getHeightAndCheck(Node *, int &);
-    static void fixAfterRemove(Node *&, int source, int num);
-    static void removeNode(Node *&);
+    static void fixNodeAfterRemove(Node *&, int source, int num);
+    static void removeNode(Node *&, int &);
     static void removeTree(Node *&);
-    Node *root;
+    Node *_root;
 };
 
 }
