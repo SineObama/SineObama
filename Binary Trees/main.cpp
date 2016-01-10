@@ -31,9 +31,10 @@ int main() {
             cerr << ',' << ar[i];
             t.insert(ar[i]);
         }
-        for (int i = 0; i < 13; i++) {
+        for (int i = 0; i < 3; i++) {
             t.remove(ar[i]);
         }
+//        t.remove(3);
         cout << '\n';
         t.print();
         t.inorder(print);

@@ -134,9 +134,7 @@ template<class T>
 bool AVLTree<T>::removeFromNode(Node *&node, const T &data) {
     if (!node)
         return false;
-    int num = data < node->data ? 0 : 1, symbol = num ? -1 : 1;
-    Node *next = node->child[num], *another = node->child[1 - num];
-    int source = next ? next->BF : 0;  // 子树原来的因子
+    int num = data < node->data ? 0 : 1;
     if (data == node->data) {
         if (!node->child[0]) {
             if (!node->child[1]) {
@@ -150,28 +148,27 @@ bool AVLTree<T>::removeFromNode(Node *&node, const T &data) {
             }
             return true;
         }
-        node->data = removeTheBiggest(node->child[0]);
-        next = node->child[0];
         num = 0;
-        symbol = 1;
-        another = node->child[1];
-//        node->BF++;
-//        fixNode(node);
-//        return true;
+        node->data = removeTheBiggest(node->child[0]);
     } else {
-    if (!removeFromNode(node->child[num], data))
-        return false;
+        if (!removeFromNode(node->child[num], data))
+            return false;
     }
     // 删除节点成功
+    int symbol = num ? -1 : 1;
+    Node *next = node->child[num], *another = node->child[1 - num];
+    int source = next ? next->BF : 0;  // 子树原来的因子
 
     if (!next) {  // 子树被删除
         node->BF += symbol;
-        if (node->BF > -2 && node->BF < 2)
-            return true;
-        // 需要旋转
-        if (another->child[num])
-            rotate(another, num);
-        rotate(node, !num);
+        fixNode(another->child[num]);
+        fixNode(node);
+//        if (node->BF > -2 && node->BF < 2)
+//            return true;
+//        // 需要旋转
+//        if (another->child[num])
+//            rotate(another, num);
+//        rotate(node, !num);
         return true;
     }
     // 子树没变删除
