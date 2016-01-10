@@ -6,9 +6,12 @@
  */
 
 // todo 2016年1月9日21:42:43 刚刚写完，只做了简单测试，思路上不知道为什么西西里过不了
-
 #ifndef AVLTREE_H_
 #define AVLTREE_H_
+
+#include <vector>
+#include <string>
+#include <sstream>
 
 namespace Sine {
 
@@ -35,14 +38,19 @@ class AVLTree {
     bool remove(const T &);
     const Node *search(const T &) const;
     void inorder(void (*)(const T &)) const;
+    void print() const;
+    int validator() const;
  protected:
     void recursiveInorder(Node *, void (*)(const T &)) const;
+    static bool fixNode(Node *&);
  private:
     static bool insertToNode(Node *&, const T &);
     static bool removeFromNode(Node *&, const T &);
     static T removeTheBiggest(Node *&);
     static const Node *searchInNode(const Node *, const T &);
     static bool rotate(Node *&, bool left);
+    static void inorderPrint(std::vector<std::stringstream *> &, Node *, int);
+    static int getHeightAndCheck(Node *, int &);
     Node *root;
 };
 
