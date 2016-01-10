@@ -134,21 +134,20 @@ template<class T>
 bool AVLTree<T>::removeFromNode(Node *&node, const T &data) {
     if (!node)
         return false;
-    int num = data < node->data ? 0 : 1;
+    int num = data > node->data ? 1 : 0;
     if (data == node->data) {
         if (!node->child[0]) {
             if (!node->child[1]) {
                 delete node;
                 node = 0;
             } else {
-                node->data = node->child[1]->data;
-                node->BF = 0;
-                delete node->child[1];
-                node->child[1] = 0;
+                Node *tem = node;
+                node = node->child[1];
+                tem->child[1] = 0;
+                delete tem;
             }
             return true;
         }
-        num = 0;
         node->data = removeTheBiggest(node->child[0]);
     } else {
         if (!removeFromNode(node->child[num], data))
@@ -161,14 +160,14 @@ bool AVLTree<T>::removeFromNode(Node *&node, const T &data) {
 
     if (!next) {  // 子树被删除
         node->BF += symbol;
-        fixNode(another->child[num]);
-        fixNode(node);
-//        if (node->BF > -2 && node->BF < 2)
-//            return true;
-//        // 需要旋转
-//        if (another->child[num])
-//            rotate(another, num);
-//        rotate(node, !num);
+//        fixNode(another->child[num]);
+//        fixNode(node);
+        if (node->BF > -2 && node->BF < 2)
+            return true;
+        // 需要旋转
+        if (another->child[num])
+            rotate(another, num);
+        rotate(node, !num);
         return true;
     }
     // 子树没变删除
