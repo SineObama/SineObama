@@ -25,16 +25,16 @@ int main() {
     {  // AVLÊ÷²âÊÔ´úÂë
         Sine::AVLTree<int> t;
         srand(time(NULL));
-        int ar[100] = { 6,1,11,3,5,12,0,8,4,2,9,10,7 };
+        int ar[100] = { 6,8,10,11,5,9,2,12,3,0,1,7,4 };
         for (int i = 0; i < 13; i++) {
 //            ar[i] = rand() % 200;
             cerr << ',' << ar[i];
             t.insert(ar[i]);
         }
-        for (int i = 0; i < 13; i++) {
+        for (int i = 0; i < 1; i++) {
             t.remove(ar[i]);
         }
-//        t.remove(3);
+//        t.remove(8);
         cout << '\n';
         t.print();
         t.inorder(print);

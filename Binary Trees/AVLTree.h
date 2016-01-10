@@ -51,6 +51,8 @@ class AVLTree {
     static bool rotate(Node *&, bool left);
     static void inorderPrint(std::vector<std::stringstream *> &, Node *, int);
     static int getHeightAndCheck(Node *, int &);
+    static void fixAfterRemove(Node *&, int source, int num);
+    static void removeNode(Node *&);
     Node *root;
 };
 
