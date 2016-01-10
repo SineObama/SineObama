@@ -134,7 +134,7 @@ template<class T>
 bool AVLTree<T>::removeFromNode(Node *&node, const T &data) {
     if (!node)
         return false;
-    int num = data > node->data ? 1 : 0;
+    int num = node->data < data ? 1 : 0;
     int source = node->child[num] ? node->child[num]->BF : 0;  // 子树原来的因子
     if (data == node->data) {
         if (!node->child[0])
@@ -259,8 +259,10 @@ void AVLTree<T>::fixAfterRemove(Node *&node, int source, int num) {
     if (node->BF > -2 && node->BF < 2)
         return;
     // 需要旋转
-    if (next->BF == -symbol)
-        rotate(next, symbol == -1);
+    if (another->BF == -symbol)
+        rotate(another, symbol == -1);
+//    if (next->BF == -symbol)
+//        rotate(next, symbol == -1);
     rotate(node, symbol == 1);
 }
 
