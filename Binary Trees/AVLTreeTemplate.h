@@ -222,12 +222,11 @@ int AVLTree<T>::getHeightAndCheck(Node *node, int &n) {
     int left = getHeightAndCheck(node->child[0], n);
     int right = getHeightAndCheck(node->child[1], n);
     int height = (left > right ? left : right) + 1;
-    if (right - left != node->BF)
+    if (right - left != node->BF || (node->BF > 1 || node->BF < -1)) {
         n++;
-    else if (node->BF > 1 || node->BF < -1)
-        n++;
-    std::cout << "data: " << node->data << " height: " << height << " BF: "
-            << node->BF << "  " << right - left << std::endl;
+        std::cout << "error! data: " << node->data << " height: " << height
+                << " BF: " << node->BF << "  " << right - left << std::endl;
+    }
     return height;
 }
 
@@ -235,16 +234,11 @@ template<class T>
 void AVLTree<T>::fixAfterRemove(Node *&node, int source, int num) {
     if (!node)
         return;
-    Node *&next = node->child[num], *&another = node->child[1 - num];
+    Node *&next = node->child[num];
     int symbol = num ? -1 : 1;
     if (!next) {  // 子树被删除
         node->BF += symbol;
-        if (node->BF > -2 && node->BF < 2)
-            return;
-        // 需要旋转
-        if (!another->child[1 - num])
-            rotate(another, num);
-        rotate(node, !num);
+        fixNode(node);
         return;
     }
     // 子树没变删除
@@ -256,12 +250,7 @@ void AVLTree<T>::fixAfterRemove(Node *&node, int source, int num) {
 
     // 已知子树高度-1
     node->BF += symbol;
-    if (node->BF > -2 && node->BF < 2)
-        return;
-    // 需要旋转
-    if (another->BF == -symbol)
-        rotate(another, symbol == -1);
-    rotate(node, symbol == 1);
+    fixNode(node);
 }
 
 template<class T>
