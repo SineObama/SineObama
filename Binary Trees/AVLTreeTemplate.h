@@ -24,7 +24,7 @@ AVLTree<T>::AVLTree() {
 
 template<class T>
 AVLTree<T>::~AVLTree() {
-    delete root;
+    removeTree(root);
 }
 
 template<class T>
@@ -230,7 +230,8 @@ void AVLTree<T>::fixAfterRemove(Node *&node, int source, int num) {
     if (next && (next->BF != 0 || next->BF == source))  // 子树没变删除时，因子不为0，或者不变，则子树高度不变
         return;
     // 子树高度-1
-    node->BF += num ? -1 : 1;;
+    node->BF += num ? -1 : 1;
+    ;
     fixNode(node);
 }
 
@@ -246,7 +247,6 @@ void AVLTree<T>::removeNode(Node *&node) {
             Node *tem = node;
             node = node->child[1];
             node->BF = tem->BF;
-            tem->child[1] = 0;
             delete tem;
         }
         return;
@@ -255,10 +255,18 @@ void AVLTree<T>::removeNode(Node *&node) {
     tem->child[0] = node->child[0];
     tem->child[1] = node->child[1];
     tem->BF = node->BF;
-    node->child[0] = 0;
-    node->child[1] = 0;
     delete node;
     node = tem;
+}
+
+template<class T>
+void AVLTree<T>::removeTree(Node *&root) {
+    if (!root)
+        return;
+    removeTree(root->child[0]);
+    removeTree(root->child[1]);
+    delete root;
+    root = 0;
 }
 
 }

@@ -27,10 +27,6 @@ class AVLTree {
             child[0] = child[1] = 0;
             BF = 0;
         }
-        ~Node() {
-            delete child[0];
-            delete child[1];
-        }
     };
     AVLTree();
     ~AVLTree();
@@ -53,6 +49,7 @@ class AVLTree {
     static int getHeightAndCheck(Node *, int &);
     static void fixAfterRemove(Node *&, int source, int num);
     static void removeNode(Node *&);
+    static void removeTree(Node *&);
     Node *root;
 };
 
