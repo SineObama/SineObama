@@ -113,20 +113,12 @@ bool AVLTree<T>::insertToNode(Node *&node, const T &data) {
     }
     // 子树为非新节点
     // 插入之后子树因子为0，或不变，则子树高度不可能变化
-    if (next->BF == 0)
-        return true;
-    if (next->BF == source)
+    if (next->BF == 0 || next->BF == source)
         return true;
 
     // 已知子树高度+1，处理本节点
-    int symbol = data < node->data ? -1 : 1;  // 为了合并左右子树这两种情况
-    node->BF += symbol;
-    if (node->BF > -2 && node->BF < 2)  // 树依然平衡
-        return true;
-    // 需要旋转
-    if (next->BF == -symbol)
-        rotate(next, symbol == -1);
-    rotate(node, symbol == 1);
+    node->BF += data < node->data ? -1 : 1;
+    fixNode(node);
     return true;
 }
 
@@ -234,22 +226,11 @@ template<class T>
 void AVLTree<T>::fixAfterRemove(Node *&node, int source, int num) {
     if (!node)
         return;
-    Node *&next = node->child[num];
-    int symbol = num ? -1 : 1;
-    if (!next) {  // 子树被删除
-        node->BF += symbol;
-        fixNode(node);
+    Node *next = node->child[num];
+    if (next && (next->BF != 0 || next->BF == source))  // 子树没变删除时，因子不为0，或者不变，则子树高度不变
         return;
-    }
-    // 子树没变删除
-    // 子树因子不为0，或者不变，则子树高度不变
-    if (next->BF != 0)
-        return;
-    if (next->BF == source)
-        return;
-
-    // 已知子树高度-1
-    node->BF += symbol;
+    // 子树高度-1
+    node->BF += num ? -1 : 1;;
     fixNode(node);
 }
 
