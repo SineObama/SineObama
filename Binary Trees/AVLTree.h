@@ -46,7 +46,7 @@ class AVLTree {
  private:
     static bool insertToNode(Node *&, const T &);
     static bool removeFromNode(Node *&, const T &);
-    static T removeTheBiggest(Node *&);
+    static Node *removeTheBiggest(Node *&);
     static const Node *searchInNode(const Node *, const T &);
     static bool rotate(Node *&, bool left);
     static void inorderPrint(std::vector<std::stringstream *> &, Node *, int);

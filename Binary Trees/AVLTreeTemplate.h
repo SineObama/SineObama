@@ -137,6 +137,8 @@ bool AVLTree<T>::removeFromNode(Node *&node, const T &data) {
     int num = data > node->data ? 1 : 0;
     int source = node->child[num] ? node->child[num]->BF : 0;  // 子树原来的因子
     if (data == node->data) {
+        if (!node->child[0])
+            num = 1;
         removeNode(node);
     } else if (!removeFromNode(node->child[num], data)) {
         return false;
@@ -147,23 +149,21 @@ bool AVLTree<T>::removeFromNode(Node *&node, const T &data) {
 }
 
 template<class T>
-T AVLTree<T>::removeTheBiggest(Node *&node) {
+typename AVLTree<T>::Node *AVLTree<T>::removeTheBiggest(Node *&node) {
     if (!node)
         throw std::runtime_error("节点不存在");
     Node *&next = node->child[1];
     if (!next) {
-        Node *newNode = node->child[0];
+        Node *newNode = node->child[0], *back = node;
         node->child[0] = 0;
-        T data = node->data;
-        delete node;
         node = newNode;
-        return data;
+        return back;
     }
     int source = next->BF;
-    T data = removeTheBiggest(next);
+    Node *back = removeTheBiggest(next);
     // 删除节点成功
     fixAfterRemove(node, source, 1);
-    return data;
+    return back;
 }
 
 template<class T>
@@ -235,14 +235,14 @@ template<class T>
 void AVLTree<T>::fixAfterRemove(Node *&node, int source, int num) {
     if (!node)
         return;
-    Node *next = node->child[num], *another = node->child[1 - num];
+    Node *&next = node->child[num], *&another = node->child[1 - num];
     int symbol = num ? -1 : 1;
     if (!next) {  // 子树被删除
         node->BF += symbol;
         if (node->BF > -2 && node->BF < 2)
             return;
         // 需要旋转
-        if (another->child[num])
+        if (!another->child[1 - num])
             rotate(another, num);
         rotate(node, !num);
         return;
@@ -275,12 +275,20 @@ void AVLTree<T>::removeNode(Node *&node) {
         } else {
             Node *tem = node;
             node = node->child[1];
+            node->BF = tem->BF;
             tem->child[1] = 0;
             delete tem;
         }
         return;
     }
-    node->data = removeTheBiggest(node->child[0]);
+    Node *tem = removeTheBiggest(node->child[0]);
+    tem->child[0] = node->child[0];
+    tem->child[1] = node->child[1];
+    tem->BF = node->BF;
+    node->child[0] = 0;
+    node->child[1] = 0;
+    delete node;
+    node = tem;
 }
 
 }
