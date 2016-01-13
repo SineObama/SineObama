@@ -26,7 +26,7 @@ int main() {
         Sine::AVLTree<int> t;
         srand(time(NULL));
         int ar[10000] = { };
-        int n = 1700, i;
+        int n = 2000, i;
         for (int i = 0; i < n; i++) {
             ar[i] = rand() % (n * 2);
             cerr << ',' << ar[i];
