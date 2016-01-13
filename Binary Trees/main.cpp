@@ -25,20 +25,32 @@ int main() {
     {  // AVLÊ÷²âÊÔ´úÂë
         Sine::AVLTree<int> t;
         srand(time(NULL));
-        int ar[1000] = {};
-        for (int i = 0; i < 1000; i++) {
-            ar[i] = rand() % 2000;
-//            cerr << ',' << ar[i];
+        int ar[10000] = { };
+        int n = 1700, i;
+        for (int i = 0; i < n; i++) {
+            ar[i] = rand() % (n * 2);
+            cerr << ',' << ar[i];
             t.insert(ar[i]);
         }
-        for (int i = 0; i < 1000; i++) {
+        cout << "error: " << t.validator() << endl;
+        for (int i = 0; i < 2 * n; i++)
+            t.remove(rand() % (n * 2));
+        cout << "error: " << t.validator() << endl;
+        for (i = 0; i < n; i++)
             t.remove(ar[i]);
-        }
         cout << '\n';
         t.print();
-        t.inorder(print);
         cout << '\n';
-        cout << "error: " << t.validator();
+        cout << "error: " << t.validator() << endl;
+
+        t.remove(ar[i]);
+
+        cout << '\n';
+        t.print();
+        cout << '\n';
+        cout << "error: " << t.validator() << endl;
+
+        t.inorder(print);
     }
 
     {  // ºìºÚÊ÷²âÊÔ´úÂë
