@@ -130,60 +130,50 @@ bool AVLTree2<T>::insertToTree(Node *&root, const T &data) {
     return true;
 }
 
-/* 找到要删除的节点后使他向下移动，最终成为叶节点再删除。
- * 如何通过因子判断出子树的高度变化真是个大问题。。。 */
-//template<class T>
-//bool AVLTree2<T>::removeFromTree(Node *&root, const T &data) {
-//    if (!root)
-//        return false;
-//    int symbol = 2;
-//    if (root->data == data) {  // 尝试使当前节点下移
-//        if (root->BF == 0 && !root->child[0]) {  // 没有子树了
-//            delete root;
-//            root = 0;
-//            return true;
-//        }
-//        rotate(root, (symbol = root->BF > 0));
-//    }
-//    int num = root->data < data;
-//    Node *&next = root->child[num];
-//    if (!next)
-//        return false;
-//    if (fixNode(next))
-//        root->BF -= num * 2 - 1;
-//    int source = next->BF;
-//    if (!removeFromTree(next, data))
-//        return false;
-//    // 删除节点成功
-//    if (!next || (next->BF == 0 && next->BF != source))  // 子树被删除，或者子树因子从非0变为0，说明子树高度-1
-//        root->BF -= num * 2 - 1;
-//    fixNode(root);
-//    return true;
-//}
+/* 找到要删除的节点后使他向下移动，最终成为叶节点再删除 */
+template<class T>
+bool AVLTree2<T>::removeFromTree(Node *&root, const T &data) {
+    if (!root)
+        return false;
+    if (root->data == data) {  // 尝试使当前节点下移
+        if (root->high == 1) {  // 没有子树了
+            delete root;
+            root = 0;
+            return true;
+        }
+        rotate(root, (getBF(root) > 0));
+    }
+    int num = root->data < data;
+    Node *&next = root->child[num];
+    if (!next)
+        return false;
+    if (!removeFromTree(next, data))
+        return false;
+    fixNode(root);
+    return true;
+}
+
 /* 节点高度发生变化时（减少1）返回真。 */
-//template<class T>
-//bool AVLTree2<T>::fixNode(Node *&node) {
-//    if (!node)
-//        return false;
-//    short leftHigh = node->child[0] ? node->child[0]->high : 0;
-//    short rightHigh = node->child[1] ? node->child[1]->high : 0;
-//    short biggest = leftHigh > rightHigh ? leftHigh : rightHigh;
-//    short BF = rightHigh - leftHigh;
-//    node->high = biggest + 1;
-//    if (BF < 2 && BF > -2)
-//        return false;
-//    rotate(node, BF > 0);
-//    return true;
-//}
-// 精华的旋转啊。。。包含了因子的变化规律
+template<class T>
+bool AVLTree2<T>::fixNode(Node *&node) {
+    if (!node)
+        return false;
+    int BF = getBF(node);
+    if (BF < 2 && BF > -2) {
+        short left = getHigh(node->child[0]);
+        short right = getHigh(node->child[1]);
+        node->high = left > right ? left + 1 : right + 1;
+        return false;
+    }
+    int num = BF > 0;
+    if (getBF(node->child[num]) * BF < 0)
+        rotate(node->child[num], !num);
+    rotate(node, num);
+    return true;
+}
+
 template<class T>
 bool AVLTree2<T>::rotate(Node *&node, bool left) {
-//    if (node->BF > 2 || node->BF < -2)
-//        throw std::runtime_error("因子不合法");
-//    if (node->BF * newRoot->BF < 0)
-//        throw std::runtime_error("旋转后不平衡");
-//    if (node->BF == 0)
-//        throw std::runtime_error("因子为0不应该被旋转");
     int num = left;
     Node *newRoot = node->child[num];
     if (!newRoot)
@@ -243,7 +233,7 @@ int AVLTree2<T>::checkHeight(Node *root, int &n) {
     int right = checkHeight(root->child[1], n);
     int bigger = left > right ? left : right;
     if (root->high != bigger + 1) {
-        std::cerr << root->data << " " << root->high << "\n";
+        std::cerr << "error: " << root->data << " " << root->high << "\n";
         n++;
     }
     if (right - left > 1 || right - left < -1)
@@ -258,13 +248,11 @@ bool AVLTree2<T>::removeFromTree1(Node *&root, const T &data) {
     if (!root)
         return false;
     int num = root->data < data ? 1 : 0;
-    int high = root->child[num] ? root->child[num]->high : 0;  // 子树原来的因子
     if (data == root->data)
         removeNode(root, num);
     else if (!removeFromTree1(root->child[num], data))
         return false;
-    // 删除节点成功
-    fixNodeAfterRemove(root, high, num);
+    fixNode(root);
     return true;
 }
 
@@ -303,49 +291,10 @@ typename AVLTree2<T>::Node *AVLTree2<T>::removeTheBiggest(Node *&root) {
         root = newNode;
         return back;
     }
-    int high = next->high;
     Node *back = removeTheBiggest(next);
-    fixNodeAfterRemove(root, high, 1);
+    fixNode(root);
     return back;
 }
-
-template<class T>
-void AVLTree2<T>::fixNodeAfterRemove(Node *&node, int high, int num) {
-    if (!node)
-        return;
-    Node *next = node->child[num], *&brother = node->child[1 - num];
-    if (!next) {
-        if (!brother) {
-            node->high = 1;
-            return;
-        }
-    } else {
-        if (next->high == high || high == getHigh(node->child[1 - num]))
-            return;
-        if (next->high == getHigh(node->child[1 - num])) {
-            node->high--;
-            return;
-        }
-    }
-    if (getBF(brother) * (num ? 1 : -1) > 0)
-        rotate(brother, num);
-    rotate(node, !num);
-}
-
-//template<class T>
-//bool AVLTree2<T>::fixNode1(Node *&node) {
-//    if (!node)
-//        return false;
-//    int num = 0;
-//    if (node->BF > 1)
-//        num = 1;
-//    else if (node->BF > -2)
-//        return false;
-//    if (node->child[num]->BF * (num * 2 - 1) < 0)
-//        rotate(node->child[num], !num);
-//    rotate(node, num);
-//    return true;
-//}
 
 }
 

@@ -75,8 +75,6 @@ class AVLTree2 {
     static bool removeFromTree1(Node *&, const T &);
     static void removeNode(Node *&, int &);
     static Node *removeTheBiggest(Node *&);
-    static void fixNodeAfterRemove(Node *&, int source, int num);
-    static bool fixNode1(Node *&);
 
     Node *_root;
 

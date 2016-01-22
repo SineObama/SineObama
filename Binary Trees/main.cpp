@@ -25,35 +25,30 @@ int main() {
     {  // AVLÊ÷²âÊÔ´úÂë
         Sine::AVLTree2<int> t;
         srand(time(NULL));
-        int ar[100000] = {6,9,24,1,6,27,31,10,35,5,29,17,32,35,33,14};
-        int n = 16000, i;
+        int ar[100000] = {18,1,14,6,1,17,8,2,9,5 };
+        int n = 10000, i;
         for (int i = 0; i < n; i++) {
             ar[i] = rand() % (n * 2);
             cerr << ',' << ar[i];
             t.insert(ar[i]);
         }
-        cout << "error: " << t.validator() << endl;
-        for (int i = 0; i < 2 * n; i++) {
-            int tem = rand() % (n * 2);
-//            cerr << ' ' << tem;
-            t.remove(tem);
-//            if (t.remove(tem))
-//                cerr << "!";
-        }
-        cout << "error: " << t.validator() << endl;
+        cout << "insert:error: " << t.validator() << endl;
+        for (int i = 0; i < 2 * n; i++)
+            t.remove(rand() % (n * 2));
+        cout << "random remove:error: " << t.validator() << endl;
         for (i = 0; i < n; i++)
             t.remove(ar[i]);
         cout << '\n';
         t.print();
         cout << '\n';
-        cout << "error: " << t.validator() << endl;
+        cout << "all remove:error: " << t.validator() << endl;
 
-//        t.remove(17);
+//        t.remove(18);
 
         cout << '\n';
         t.print();
         cout << '\n';
-        cout << "error: " << t.validator() << endl;
+        cout << "last:error: " << t.validator() << endl;
 
         t.inorder(print);
     }
