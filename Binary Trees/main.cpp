@@ -7,7 +7,7 @@
 
 #include "RedBlackTree.h"
 #include "SimpleTiming.h"
-#include "AVLTree.h"
+#include "AVLTree2.h"
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
@@ -23,18 +23,23 @@ void print(const int &a) {
 
 int main() {
     {  // AVLÊ÷²âÊÔ´úÂë
-        Sine::AVLTree<int> t;
+        Sine::AVLTree2<int> t;
         srand(time(NULL));
-        int ar[10000] = { };
-        int n = 2000, i;
+        int ar[100000] = {6,9,24,1,6,27,31,10,35,5,29,17,32,35,33,14};
+        int n = 16000, i;
         for (int i = 0; i < n; i++) {
             ar[i] = rand() % (n * 2);
             cerr << ',' << ar[i];
             t.insert(ar[i]);
         }
         cout << "error: " << t.validator() << endl;
-        for (int i = 0; i < 2 * n; i++)
-            t.remove(rand() % (n * 2));
+        for (int i = 0; i < 2 * n; i++) {
+            int tem = rand() % (n * 2);
+//            cerr << ' ' << tem;
+            t.remove(tem);
+//            if (t.remove(tem))
+//                cerr << "!";
+        }
         cout << "error: " << t.validator() << endl;
         for (i = 0; i < n; i++)
             t.remove(ar[i]);
@@ -43,7 +48,7 @@ int main() {
         cout << '\n';
         cout << "error: " << t.validator() << endl;
 
-        t.remove(ar[i]);
+//        t.remove(17);
 
         cout << '\n';
         t.print();
