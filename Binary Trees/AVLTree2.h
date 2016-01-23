@@ -14,6 +14,7 @@
 
 namespace Sine {
 
+/* 节点保存高度的形式 */
 template<class T>
 class AVLTree2 {
 
@@ -23,11 +24,7 @@ class AVLTree2 {
         T data;
         Node *child[2];  // 0 for left, the smaller, 1 for right
         short high;
-        Node(const T &d)
-                : data(d) {
-            child[0] = child[1] = 0;
-            high = 1;
-        }
+        Node(const T &d);
     };
     AVLTree2();
     AVLTree2(const AVLTree2 &);
@@ -54,14 +51,15 @@ class AVLTree2 {
  private:
 
     static void recursiveCopy(Node *&, const Node *);
-    static void removeTree(Node *&);
+    static void recursiveRemoveTree(Node *&);
 
-    static bool insertToTree(Node *&, const T &);
-    static bool removeFromTree(Node *&, const T &);
+    static bool recursiveInsertToTree(Node *&, const T &);
+    static bool recursiveRemoveFromTree(Node *&, const T &);
 
     /* helper function*/
-    static bool fixNode(Node *&);
-    static bool rotate(Node *&, bool left);
+    static void fixNode(Node *&);
+    static void fixHigh(Node *&);
+    static void rotate(Node *&, bool left);
 
     static const Node *searchInTree(const Node *, const T &);
 
@@ -69,11 +67,12 @@ class AVLTree2 {
     static void inorderPrint(std::vector<std::stringstream *> &, const Node *,
                              int);
 
-    static int checkHeight(Node *, int &);
+    static short checkHeight(Node *, int &);
+    static short getHigherChild(Node *);
 
     /* another longer way to remove node */
-    static bool removeFromTree1(Node *&, const T &);
-    static void removeNode(Node *&, int &);
+    static bool recursiveRemoveFromTree1(Node *&, const T &);
+    static void removeNode(Node *&);
     static Node *removeTheBiggest(Node *&);
 
     Node *_root;

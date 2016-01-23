@@ -52,7 +52,7 @@ class AVLTree {
  private:
 
     static void recursiveCopy(Node *&, const Node *);
-    static void removeTree(Node *&);
+    static void recursiveRemoveTree(Node *&);
 
     static bool insertToTree(Node *&, const T &);
     static bool removeFromTree(Node *&, const T &);

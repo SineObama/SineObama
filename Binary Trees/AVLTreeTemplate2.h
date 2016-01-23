@@ -18,6 +18,13 @@
 namespace Sine {
 
 template<class T>
+AVLTree2<T>::Node::Node(const T &d)
+        : data(d) {
+    child[0] = child[1] = 0;
+    high = 1;
+}
+
+template<class T>
 AVLTree2<T>::AVLTree2() {
     _root = 0;
 }
@@ -29,17 +36,17 @@ AVLTree2<T>::AVLTree2(const AVLTree2 &x) {
 
 template<class T>
 AVLTree2<T>::~AVLTree2() {
-    removeTree(_root);
+    recursiveRemoveTree(_root);
 }
 
 template<class T>
 bool AVLTree2<T>::insert(const T &data) {
-    return insertToTree(_root, data);
+    return recursiveInsertToTree(_root, data);
 }
 
 template<class T>
 bool AVLTree2<T>::remove(const T &data) {
-    return removeFromTree1(_root, data);
+    return recursiveRemoveFromTree1(_root, data);
 }
 
 template<class T>
@@ -66,11 +73,7 @@ int AVLTree2<T>::validator() const {
 
 template<class T>
 int AVLTree2<T>::getBF(const Node *root) {
-    if (!root)
-        return 0;
-    short left = root->child[0] ? root->child[0]->high : 0;
-    short right = root->child[1] ? root->child[1]->high : 0;
-    return right - left;
+    return root ? getHigh(root->child[1]) - getHigh(root->child[0]) : 0;
 }
 
 template<class T>
@@ -91,48 +94,41 @@ template<class T>
 void AVLTree2<T>::recursiveCopy(Node *&root, const Node *other) {
     if (!other) {
         root = 0;
-    } else {
-        root = new Node(other->data);
-        root->high = other->high;
-        recursiveCopy(root->child[0], other->child[0]);
-        recursiveCopy(root->child[1], other->child[1]);
+        return;
     }
+    root = new Node(other->data);
+    root->high = other->high;
+    recursiveCopy(root->child[0], other->child[0]);
+    recursiveCopy(root->child[1], other->child[1]);
+
 }
 
 template<class T>
-void AVLTree2<T>::removeTree(Node *&root) {
+void AVLTree2<T>::recursiveRemoveTree(Node *&root) {
     if (!root)
         return;
-    removeTree(root->child[0]);
-    removeTree(root->child[1]);
+    recursiveRemoveTree(root->child[0]);
+    recursiveRemoveTree(root->child[1]);
     delete root;
     root = 0;
 }
 
 template<class T>
-bool AVLTree2<T>::insertToTree(Node *&root, const T &data) {
+bool AVLTree2<T>::recursiveInsertToTree(Node *&root, const T &data) {
     if (!root)
         return (root = new Node(data));
     if (data == root->data)
         return false;
-    int num = data < root->data ? 0 : 1;
-    Node *&next = root->child[num];
-    short high = next ? next->high : 0;
-    if (!insertToTree(next, data))
+    Node *&next = root->child[data > root->data];
+    if (!recursiveInsertToTree(next, data))
         return false;
-    if (!high)
-        return (root->high = 2);
-    if (high == next->high || root->high > next->high)
-        return true;
-    if (getBF(next) * (num ? 1 : -1) < 0)
-        rotate(next, !num);
-    rotate(root, num);
+    fixNode(root);
     return true;
 }
 
 /* 找到要删除的节点后使他向下移动，最终成为叶节点再删除 */
 template<class T>
-bool AVLTree2<T>::removeFromTree(Node *&root, const T &data) {
+bool AVLTree2<T>::recursiveRemoveFromTree(Node *&root, const T &data) {
     if (!root)
         return false;
     if (root->data == data) {  // 尝试使当前节点下移
@@ -143,11 +139,8 @@ bool AVLTree2<T>::removeFromTree(Node *&root, const T &data) {
         }
         rotate(root, (getBF(root) > 0));
     }
-    int num = root->data < data;
-    Node *&next = root->child[num];
-    if (!next)
-        return false;
-    if (!removeFromTree(next, data))
+    Node *&next = root->child[data > root->data];
+    if (!next || !recursiveRemoveFromTree(next, data))
         return false;
     fixNode(root);
     return true;
@@ -155,50 +148,50 @@ bool AVLTree2<T>::removeFromTree(Node *&root, const T &data) {
 
 /* 节点高度发生变化时（减少1）返回真。 */
 template<class T>
-bool AVLTree2<T>::fixNode(Node *&node) {
+void AVLTree2<T>::fixNode(Node *&node) {
     if (!node)
-        return false;
+        return;
     int BF = getBF(node);
     if (BF < 2 && BF > -2) {
-        short left = getHigh(node->child[0]);
-        short right = getHigh(node->child[1]);
-        node->high = left > right ? left + 1 : right + 1;
-        return false;
+        fixHigh(node);
+        return;
     }
     int num = BF > 0;
     if (getBF(node->child[num]) * BF < 0)
         rotate(node->child[num], !num);
     rotate(node, num);
-    return true;
+    return;
 }
 
 template<class T>
-bool AVLTree2<T>::rotate(Node *&node, bool left) {
+void AVLTree2<T>::fixHigh(Node *&node) {
+    if (!node)
+        throw std::runtime_error("节点为空");
+    node->high = getHigherChild(node);
+}
+
+template<class T>
+void AVLTree2<T>::rotate(Node *&node, bool left) {
     int num = left;
     Node *newRoot = node->child[num];
     if (!newRoot)
         throw std::runtime_error("没有可旋转的节点");
-    short grand1 = getHigh(node->child[1 - num]);
-    short grand2 = getHigh(newRoot->child[1 - num]);
-    node->high = grand1 > grand2 ? grand1 + 1 : grand2 + 1;
-    short son = getHigh(newRoot->child[num]);
-    newRoot->high = node->high > son ? node->high + 1 : son + 1;
     node->child[num] = newRoot->child[1 - num];
+    fixHigh(node);
     newRoot->child[1 - num] = node;
     node = newRoot;
-    return true;
+    fixHigh(node);
+    return;
 }
 
 template<class T>
 const typename AVLTree2<T>::Node *AVLTree2<T>::searchInTree(const Node *root,
                                                             const T &data) {
-    if (root == 0)
-        return 0;
-    if (data == root->data)
+    if (!root || data == root->data)
         return root;
-    if (data < root->data)
-        return searchInTree(root->child[0], data);
-    return searchInTree(root->child[1], data);
+    return data < root->data ?
+            searchInTree(root->child[0], data) :
+            searchInTree(root->child[1], data);
 }
 
 template<class T>
@@ -225,51 +218,50 @@ void AVLTree2<T>::inorderPrint(std::vector<std::stringstream *> &v,
     inorderPrint(v, root->child[1], n + 1);
 }
 
+// for validator
 template<class T>
-int AVLTree2<T>::checkHeight(Node *root, int &n) {
+short AVLTree2<T>::checkHeight(Node *root, int &n) {
     if (!root)
         return 0;
-    int left = checkHeight(root->child[0], n);
-    int right = checkHeight(root->child[1], n);
-    int bigger = left > right ? left : right;
-    if (root->high != bigger + 1) {
-        std::cerr << "error: " << root->data << " " << root->high << "\n";
+    if (root->high != getHigherChild(root) + 1)
         n++;
-    }
-    if (right - left > 1 || right - left < -1)
+    int BF = getBF(root);
+    if (BF > 1 || BF < -1)
         n++;
     return root->high;
+}
+
+template<class T>
+short AVLTree2<T>::getHigherChild(Node *node) {
+    if (!node)
+        throw std::runtime_error("节点为空");
+    short left = getHigh(node->child[0]);
+    short right = getHigh(node->child[1]);
+    return left > right ? left : right;
 }
 
 /* 一开始想的方法。找到要删除的点后，把它和左子树中最大的点交换，
  * 从而将问题转化成删除叶节点。 */
 template<class T>
-bool AVLTree2<T>::removeFromTree1(Node *&root, const T &data) {
+bool AVLTree2<T>::recursiveRemoveFromTree1(Node *&root, const T &data) {
     if (!root)
         return false;
-    int num = root->data < data ? 1 : 0;
     if (data == root->data)
-        removeNode(root, num);
-    else if (!removeFromTree1(root->child[num], data))
+        removeNode(root);
+    else if (!recursiveRemoveFromTree1(root->child[root->data < data], data))
         return false;
     fixNode(root);
     return true;
 }
 
 template<class T>
-void AVLTree2<T>::removeNode(Node *&node, int &num) {
+void AVLTree2<T>::removeNode(Node *&node) {
     if (!node)
         return;
     if (!node->child[0]) {
         Node *tem = node;
-        if (!node->child[1]) {
-            node = 0;
-        } else {
-            node = node->child[1];
-            node->high--;
-        }
+        node = node->child[1];
         delete tem;
-        num = 1;
         return;
     }
     Node *tem = removeTheBiggest(node->child[0]);

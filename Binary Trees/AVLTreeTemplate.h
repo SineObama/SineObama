@@ -29,7 +29,7 @@ AVLTree<T>::AVLTree(const AVLTree &x) {
 
 template<class T>
 AVLTree<T>::~AVLTree() {
-    removeTree(_root);
+    recursiveRemoveTree(_root);
 }
 
 template<class T>
@@ -86,11 +86,11 @@ void AVLTree<T>::recursiveCopy(Node *&root, const Node *other) {
 }
 
 template<class T>
-void AVLTree<T>::removeTree(Node *&root) {
+void AVLTree<T>::recursiveRemoveTree(Node *&root) {
     if (!root)
         return;
-    removeTree(root->child[0]);
-    removeTree(root->child[1]);
+    recursiveRemoveTree(root->child[0]);
+    recursiveRemoveTree(root->child[1]);
     delete root;
     root = 0;
 }
