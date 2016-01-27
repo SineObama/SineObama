@@ -11,6 +11,7 @@
 #include "RedBlackTree.h"
 #include <cstdlib>
 #include <stack>
+#include <cassert>
 #include <stdexcept>
 #include "SineDebug.h"
 
@@ -18,29 +19,31 @@ void visitIntEntry(const int *x) {
     printf("%d ", *x);
 }
 
-int visitIntNode(const Sine::RedBlackTreeNode<int> *x) {
-    static int count = 0;
-    if (x == NULL)
-        return count;
-    if (x->color == Sine::black) {
-        if (x->child[0] && x->child[0]->color == Sine::black)
-            if (x->child[1] && x->child[1]->color == Sine::black)
-                count++;
-    }
-    return count;
-}
+//int visitIntNode(Sine::RedBlackTree<int>::constPtr x) {
+//    static int count = 0;
+//    if (x == NULL)
+//        return count;
+//    if (x->color == Sine::RedBlackTree<int>::black) {
+//        if (x->child[0] && x->child[0]->color == Sine::RedBlackTree<int>::black)
+//            if (x->child[1]
+//                    && x->child[1]->color == Sine::RedBlackTree<int>::black)
+//                count++;
+//    }
+//    return count;
+//}
 
 namespace Sine {
 
 template<class Entry>
-RedBlackTreeNode<Entry>::RedBlackTreeNode(const Entry &x, RedBlackColor c)
+RedBlackTree<Entry>::Node::Node(const Entry &x, Color c)
         : data(x),
           color(c) {
     child[1] = child[0] = NULL;
 }
 
 template<class Entry>
-RedBlackTreeNode<Entry> *&RedBlackTreeNode<Entry>::operator[](int index) {
+typename RedBlackTree<Entry>::Node *&RedBlackTree<Entry>::Node::operator[](
+        int index) {
     return child[index];
 }
 
@@ -91,8 +94,7 @@ void RedBlackTree<Entry>::preorder(void (*visit)(constPtr)) {
 }
 
 template<class Entry>
-template<class T>
-void RedBlackTree<Entry>::inorder(T (*visit)(constPtr)) {
+void RedBlackTree<Entry>::inorder(void (*visit)(constPtr)) {
     recursiveInorder(root, visit);
 }
 
@@ -102,7 +104,37 @@ void RedBlackTree<Entry>::postorder(void (*visit)(constPtr)) {
 }
 
 template<class Entry>
-void RedBlackTree<Entry>::recursivePreorder(NodePtr x, void (*visit)(const Entry *)) {
+int RedBlackTree<Entry>::testRedTheory() {
+    int found = 0;
+    inorderTestForRedTheory(root, found);
+    return found;
+}
+
+template<class Entry>
+int RedBlackTree<Entry>::testBlackTheory() {
+    int found = 0;
+    inorderTestForBlackTheory(root, found);
+    return found;
+}
+
+template<class Entry>
+void RedBlackTree<Entry>::print() const {
+    printTree(root);
+}
+
+template<class Entry>
+void RedBlackTree<Entry>::printTree(NodePtr _root) const {
+    std::vector<std::stringstream *> v;
+    inorderPrint(v, root, 0);
+    for (unsigned int i = 0; i < v.size(); i++) {
+        std::cout << v[i]->str() << std::endl;
+        delete v[i];
+    }
+}
+
+template<class Entry>
+void RedBlackTree<Entry>::recursivePreorder(NodePtr x,
+                                            void (*visit)(const Entry *)) {
     if (x == NULL)
         return;
     (*visit)(&x->data);
@@ -111,7 +143,8 @@ void RedBlackTree<Entry>::recursivePreorder(NodePtr x, void (*visit)(const Entry
 }
 
 template<class Entry>
-void RedBlackTree<Entry>::recursiveInorder(NodePtr x, void (*visit)(const Entry *)) {
+void RedBlackTree<Entry>::recursiveInorder(NodePtr x,
+                                           void (*visit)(const Entry *)) {
     if (x == NULL)
         return;
     recursiveInorder(x->child[0], visit);
@@ -130,7 +163,8 @@ void RedBlackTree<Entry>::recursivePostorder(NodePtr x,
 }
 
 template<class Entry>
-void RedBlackTree<Entry>::recursivePreorder(NodePtr x, void (*visit)(constPtr)) {
+void RedBlackTree<Entry>::recursivePreorder(NodePtr x,
+                                            void (*visit)(constPtr)) {
     if (x == NULL)
         return;
     (*visit)(x);
@@ -139,8 +173,7 @@ void RedBlackTree<Entry>::recursivePreorder(NodePtr x, void (*visit)(constPtr)) 
 }
 
 template<class Entry>
-template<class T>
-void RedBlackTree<Entry>::recursiveInorder(NodePtr x, T (*visit)(constPtr)) {
+void RedBlackTree<Entry>::recursiveInorder(NodePtr x, void (*visit)(constPtr)) {
     if (x == NULL)
         return;
     recursiveInorder(x->child[0], visit);
@@ -220,11 +253,10 @@ bool RedBlackTree<Entry>::nonRecursiveInsert(const Entry &x) {
 
 template<class Entry>
 bool RedBlackTree<Entry>::recursiveRemove(const Entry &x) {
-    bool hehe = false;
-    if (!removeFromNodeAndFix(root, x, hehe))
-        return false;
-    root->color = black;
-    return true;
+    root && (root->color = red);
+    bool result = removeFromNodeAndFix(root, x);
+    root && (root->color = black);
+    return result;
 }
 
 template<class Entry>
@@ -250,14 +282,13 @@ typename RedBlackTree<Entry>::NodePtr RedBlackTree<Entry>::rotateForInsert(
 }
 
 template<class Entry>
-bool RedBlackTree<Entry>::rotate(NodePtr &parent, int num) {
-    if (!parent || !parent->child[num])
-        return false;
+void RedBlackTree<Entry>::rotate(NodePtr &parent, bool left) {
+    int num = left;
+    assert(parent && parent->child[num]);
     NodePtr cur = parent->child[num];
     parent->child[num] = cur->child[1 - num];
     cur->child[1 - num] = parent;
     parent = cur;
-    return true;
 }
 
 template<class Entry>
@@ -296,260 +327,164 @@ bool RedBlackTree<Entry>::insertToNodeAndFix(NodePtr &parent, const Entry &x) {
 }
 
 /*
- * 初步思路：每进入一个子树(一层函数)之前，会把子树的根改成红色
- * (提前保存这个根的颜色。不保证子树根节点处的红定理)
- * 这个红色的根让子树在删除节点的时候有一定的“余地”可用。
- * 退出子树后根据子树根的颜色分情况处理。
- * 子树内部会认为自己是合理的，必须保证自己内部的黑定理，但不保证红定理(至少在根节点处)
- * 找到要删除的节点后(假定两层以内不会全为黑)，保证黑定理的条件下
- * 与可用的红节点进行交换，使要删除的节点向下移动。
- * 移动至“根节点”处进行删除，返回。
- */
-//template<class Entry>
-//bool RedBlackTree<Entry>::removeFromNodeAndFix(NodePtr &parent,
-//                                               const Entry &x) {
-//    dc(parent->color == red, "");
-//    if (parent->data == x) {  // be bound to return in here
-//        if (!parent->child[0] && !parent->child[1]) {  // reach bottom, no child
-//            delete parent;
-//            parent = NULL;
-//            return true;
-//        }
-//        // exchanging downstairs
-//        int num = 0;
-//        if (parent->child[0] && parent->child[0]->color == red) {
-//            num = 0;
-//        } else if (parent->child[1] && parent->child[1]->color == red) {
-//            num = 1;
-//        } else {  // todo hint double black ?
-//            dc(parent->child[0], "");
-//            dc(parent->child[1], "");
-//            dc(parent->child[0]->color == black, "");
-//            dc(parent->child[1]->color == black, "");
-//            num = 0;
-//            parent = black;
-//            parent->child[0]->color = red;
-//            parent->child[1]->color = red;
-//        }
-//        dc(rotate(parent, num), "rotate fail\n")
-//        dc(parent->child[1 - num]->data == x, "error after found x")
-//        return removeFromNodeAndFix(parent->child[1 - num], x);
-//    }
-//    int parentNum = parent->data < x;  // todo efficiency
-//    NodePtr &cur = parent->child[parentNum];
-//    if (!cur)  // searching fail (the bottom false return)
-//        return false;
-//    RedBlackColor src = cur->color;
-//    cur->color = red;  // cheat the subtree
-//    if (!removeFromNodeAndFix(cur, x))
-//        return false;
-//    if (cur == NULL) {  // a leaf node was deleted
-//        if (src == black) {
-//            parent->color = black;
-//            dc(parent->child[1 - parentNum]->color == black,
-//               "after delete, node illegal\n");
-//            parent->child[1 - parentNum]->color = red;
-//        }
-//        return true;
-//    }
-//    if (src == red)
-//        return true;
-//    if (cur->color == red && src == black)
-//        return cur->color = black || true;  // kidding
-//
-//    // src == black && cur->color == black, guarantees the parent have another child
-//    dc(src == black && cur->color == black, "");
-//    NodePtr brother = parent->child[1 - parentNum];
-//    if (brother->color == red) {
-//    } else {  // brother->color == black
-//        parent->color = black;
-//        brother->color = red;
-//    }
-//}
-/*
- * 初步思想：删除过程中应该只有可能出现一种麻烦的情况，就是子树删除节点之后不能保持
- * 原本的黑定理，就是说子树的黑节点数少了一，这样就需要上一层的树进行处理（帮忙）
- * 如果上一层的树任然不能保持原本的黑节点数，就需要再上一层的树处理……直到根。
+ * 思想：采用“替换左子树最大节点”的方法。首先把问题转化成删除叶子节点。
+ * 现在主要问题在于删除黑节点及删除后引发的问题，就是黑节点不够，即“不平衡”。
+ * ……
+ * 大概思路：进入函数之前把根改成红色(保存原本的颜色)
+ * 这个红色的根让子树在删除节点的时候可以周转一下。
+ * 处理过程可能改变根的颜色，退出函数后根据根的颜色分情况处理。
+ * 子树内部会认为自己是合理的，处理过程不保证根节点处的红定理
+ * 找到要删除的节点后，以左子树最大节点代替，细节不说了。
  */
 template<class Entry>
-bool RedBlackTree<Entry>::removeFromNodeAndFix(NodePtr &parent, const Entry &x,
-                                               bool &INeedHelp) {
+bool RedBlackTree<Entry>::removeFromNodeAndFix(NodePtr &parent,
+                                               const Entry &x) {
+    if (!parent)
+        return false;
+    assert(parent->color == red);
+    int num;
+    bool isBlack;
     if (parent->data == x) {
-        int parentNum = -1;
-        bool lendBlack = false, curNeedHelp = false;
-        if (parent->color == black) {
-            if (parent->child[0] && parent->child[0]->color == red) {
-                parent->color = red;
-                rotate(parent, 0);
-                parent->color = black;
-                parentNum = 1;
-            } else if (parent->child[1] && parent->child[1]->color == red) {
-                parent->color = red;
-                rotate(parent, 1);
-                parent->color = black;
-                parentNum = 0;
-            } else {  // todo hint two black ?
-                lendBlack = true;
-                parent->color = red;
-                rotate(parent, 1);
-                parent->color = black;
-                parentNum = 0;
-            }
-        } else {  // parent->color == red
-            if (parent->child[0] && parent->child[0]->color == red) {
-                rotate(parent, 0);
-                parentNum = 1;
-            } else if (parent->child[1] && parent->child[1]->color == red) {
-                rotate(parent, 1);
-                parentNum = 0;
-            } else {  // todo hint two black ?
-                parent->child[0]->color = black;
-                rotate(parent, 1);
-                parentNum = 0;
-            }
-        }
-        if (!removeFromNodeAndFix(parent->child[parentNum], x, curNeedHelp))
-            return false;
-    } else {  // parent->data != x
-        int parentNum = -1;
-        bool curNeedHelp = false;
-        parentNum = parent->data < x;
-        NodePtr cur = parent->child[parentNum];
-        if (!cur)
-            return false;
-        if (!removeFromNodeAndFix(cur, x, curNeedHelp))
-            return false;
-        if (!curNeedHelp) {
-            dc(parent->color != red || cur->color != red, "");
+        if (!parent->child[0]) {
+            NodePtr tem = parent;
+            parent = parent->child[1];
+            delete tem;
             return true;
         }
-        // cur need help
-        dc(!cur || cur->color == black, "you sure cur need help?");
-        NodePtr &brother = parent->child[1 - parentNum];
-        dc(brother != NULL, "no brother ?!");
-        if (parent->color == red) {  // hint brother->color == black
-            if (tryReduceBlack(brother))
-                return parent->color = black || true;
-            // reduce black fail -> have child in red
-            if (brother->child[parentNum]) {  // this is red
-                brother->color = red;
-                rotate(brother, parentNum);
-                brother->color = black;
-            }
-            // so here, brother->child[1 - parentNum] is red
-            parent->color = black;
-            brother->color = red;
-            rotate(parent, 1 - parentNum);
-            brother->color = black;
-            return true;
-        } else {  // parent->color == black
-            if (tryReduceBlack(brother))
-                return INeedHelp = true || true;
-            if (brother->color == red) {
-                dc(brother->child[0] && brother->child[1], "brother no child ?");
-                NodePtr &farChild = brother->child[1 - parentNum];
-                NodePtr &nearChild = brother->child[parentNum];
-                dc(farChild->color == black, "red under red ?");
-                dc(nearChild->color == black, "red under red ?");
-                if (nearChild[1 - parentNum]
-                        && nearChild[1 - parentNum]->color == red) {
-                } else if (nearChild[parentNum]
-                        && nearChild[parentNum]->color == red) {
-                    nearChild->color = red;
-                    rotate(nearChild, parentNum);
-                    nearChild->color = black;
-                }
-                rotate(brother, parentNum);
-                rotate(parent, 1 - parentNum);
-                brother->color = black;
-                farChild->color = red;
-                if (!nearChild || nearChild->color == black) {
-                    if (farChild[parentNum]->color == red) {
-                        rotate(farChild, parentNum);
-                        rotate(brother, 1 - parentNum);
-
-                    } else {
-                        dc(farChild[1 - parentNum]->color == red, "no red ?");
-
-                    }
-                }
-                brother->color = red;
-                farChild->color = black;
-                nearChild->color = black;
-
-                // todo
-            } else {  // brother->color == black
-                // todo
-            }
+        num = 0;
+        isBlack = parent->child[0]->color == black;
+        parent->child[0]->color = red;
+        replace(parent, getBiggestAndFix(parent->child[0]));
+    } else {
+        num = parent->data < x;
+        if (!parent->child[num])
+            return false;
+        isBlack = parent->child[num]->color == black;
+        parent->child[num]->color = red;
+        if (!removeFromNodeAndFix(parent->child[num], x)) {
+            parent->child[num]->color = isBlack ? black : red;
+            return false;
         }
     }
-}
-
-/*
- * check if the node itself can be changed into red
- * to reduce 'one black' in the tree
- */
-template<class Entry>
-bool RedBlackTree<Entry>::tryReduceBlack(NodePtr &parent) {
-    if (parent->color == red)
-        return false;
-    if (!parent->child[0] && !parent->child[1])
-        return parent->color = red || true;
-    if (!parent->child[0] || !parent->child[1])
-        return false;
-    if (parent->child[0]->color == black && parent->child[1]->color == black)
-        return parent->color = red || true;
-    return false;
+    if (!isBlack)
+        return true;
+    if (parent->child[num] && parent->child[num]->color == red)
+        parent->child[num]->color = black;
+    else
+        fixLackBlack(parent, num);
+    return true;
 }
 
 template<class Entry>
-int RedBlackTree<Entry>::testRedTheory() {
-    int found = 0;
-    inorderTestForRedTheory(root, found);
-    return found;
+void RedBlackTree<Entry>::replace(NodePtr &parent, NodePtr x) {
+    x->child[0] = parent->child[0];
+    x->child[1] = parent->child[1];
+    x->color = parent->color;
+    delete parent;
+    parent = x;
 }
 
 template<class Entry>
-int RedBlackTree<Entry>::testBlackTheory() {
-    int count = 0, length = -1, found = 0;
-    inorderTestForBlackTheory(root, count, length, found);
-    return found;
-}
-
-template<class Entry>
-void RedBlackTree<Entry>::inorderTestForRedTheory(NodePtr cur, int &found) {
-    if (cur->child[0])
-        inorderTestForRedTheory(cur->child[0], found);
-    if (cur->child[1])
-        inorderTestForRedTheory(cur->child[1], found);
-    if (cur->color == red) {
-        if (cur->child[0] && cur->child[0]->color == red)
-            found++;
-        if (cur->child[1] && cur->child[1]->color == red)
-            found++;
+typename RedBlackTree<Entry>::NodePtr RedBlackTree<Entry>::getBiggestAndFix(
+        NodePtr &parent) {
+    assert(parent->color == red);
+    NodePtr back = NULL;
+    NodePtr &child = parent->child[1];
+    if (child) {
+        bool isBlack = child->color == black;
+        child->color = red;
+        back = getBiggestAndFix(child);
+        if (!isBlack)
+            return back;
+        if (child && child->color == red) {
+            child->color = black;
+            return back;
+        }
+        fixLackBlack(parent, 1);
+        return back;
     }
+    back = parent;
+    parent = parent->child[0];
+    return back;
 }
 
 template<class Entry>
-void RedBlackTree<Entry>::inorderTestForBlackTheory(NodePtr cur, int &count,
-                                                    int &length, int &found) {
-    if (cur->color == black)
-        count++;
-    if (!cur->child[0] && !cur->child[1]) {
-        if (length == -1)
-            length = count;
-        else if (length != count)
-            found++;
-        if (cur->color == black)
-            count--;
+void RedBlackTree<Entry>::fixLackBlack(NodePtr &parent, int num) {
+    NodePtr &another = parent->child[1 - num];
+    assert(another);
+    assert(!parent->child[num] || parent->child[num]->color == black);
+    if (another->color == red) {
+        rotate(parent, !num);
+        fixLackBlack(parent->child[num], num);
         return;
     }
-    if (cur->child[0])
-        inorderTestForBlackTheory(cur->child[0], count, length, found);
-    if (cur->child[1])
-        inorderTestForBlackTheory(cur->child[1], count, length, found);
+    NodePtr &same = another->child[num], &nosame = another->child[1 - num];
+    if (!same && !nosame) {
+        another->color = red;
+        parent->color = black;
+        return;
+    }
+    if (!same || !nosame) {
+        if (!nosame)
+            rotate(another, num);
+    } else {  // have two child
+        if (same->color == black && nosame->color == black) {
+            another->color = red;
+            parent->color = black;
+            return;
+        }
+        if (same->color == red && nosame->color == black) {
+            another->color = red;
+            same->color = black;
+            rotate(another, num);
+        }
+    }
+    another->color = red;
+    another->child[1 - num]->color = black;
+    parent->color = black;
+    rotate(parent, !num);
+}
+
+template<class Entry>
+bool RedBlackTree<Entry>::inorderTestForRedTheory(NodePtr cur, int &found) {
+    if (!cur)
+        return false;
+    if (cur->color == black) {
+        inorderTestForRedTheory(cur->child[0], found);
+        inorderTestForRedTheory(cur->child[1], found);
+        return false;
+    }
+    if (inorderTestForRedTheory(cur->child[0], found))
+        found++;
+    if (inorderTestForRedTheory(cur->child[1], found))
+        found++;
+    return true;
+}
+
+template<class Entry>
+int RedBlackTree<Entry>::inorderTestForBlackTheory(NodePtr cur, int &found) {
+    if (!cur)
+        return 1;
+    int count = inorderTestForBlackTheory(cur->child[0], found);
+    int count2 = inorderTestForBlackTheory(cur->child[1], found);
+    if (count != count2)
+        found++;
     if (cur->color == black)
-        count--;
+        count++;
+    return count;
+}
+
+template<class Entry>
+void RedBlackTree<Entry>::inorderPrint(std::vector<std::stringstream *> &v,
+                                       const Node *_root, int n) {
+    if (!_root)
+        return;
+    if (v.size() <= n) {
+        v.push_back(new std::stringstream());
+    }
+    inorderPrint(v, _root->child[0], n + 1);
+    (*v[n]) << ' ' << _root->data << (_root->color == red ? "r" : "");
+    inorderPrint(v, _root->child[1], n + 1);
 }
 
 }

@@ -8,31 +8,31 @@
 #ifndef REDBLACKTREE_H_
 #define REDBLACKTREE_H_
 
+#include <vector>
+#include <sstream>
+
 namespace Sine {
-
-enum RedBlackColor {
-    red,
-    black
-};
-
-template<class Entry>
-struct RedBlackTreeNode {
-    Entry data;
-//    RedBlackTreeNode<Entry> *parent;
-    RedBlackTreeNode<Entry> *child[2];  // child[0] for left child, child[1] for right child
-    RedBlackColor color;
-    RedBlackTreeNode(const Entry &, RedBlackColor);
-    RedBlackTreeNode<Entry> *&operator[](int);
-};
 
 template<class Entry>
 class RedBlackTree {
 
-    typedef RedBlackTreeNode<Entry> * NodePtr;
-    typedef RedBlackTreeNode<Entry> Node;
-    typedef const RedBlackTreeNode<Entry> * constPtr;
-
  public:
+
+    enum Color {
+        red,
+        black
+    };
+
+    struct Node {
+        Entry data;
+        Node *child[2];  // child[0] for left child, child[1] for right child
+        Color color;
+        Node(const Entry &, Color);
+        Node *&operator[](int);
+    };
+
+    typedef Node * NodePtr;
+    typedef const Node * constPtr;
 
     RedBlackTree();
     ~RedBlackTree();
@@ -45,12 +45,14 @@ class RedBlackTree {
     void inorder(void (*)(const Entry *));
     void postorder(void (*)(const Entry *));
     void preorder(void (*)(constPtr));
-    template<class T>
-    void inorder(T (*)(constPtr));
+    void inorder(void (*)(constPtr));
     void postorder(void (*)(constPtr));
 
     int testRedTheory();
     int testBlackTheory();
+
+    void print() const;
+    void printTree(NodePtr) const;
 
  protected:
 
@@ -58,8 +60,7 @@ class RedBlackTree {
     static void recursiveInorder(NodePtr, void (*)(const Entry *));
     static void recursivePostorder(NodePtr, void (*)(const Entry *));
     static void recursivePreorder(NodePtr, void (*)(constPtr));
-    template<class T>
-    static void recursiveInorder(NodePtr, T (*)(constPtr));
+    static void recursiveInorder(NodePtr, void (*)(constPtr));
     static void recursivePostorder(NodePtr, void (*)(constPtr));
 
     bool recursiveInsert(const Entry &);
@@ -71,14 +72,19 @@ class RedBlackTree {
  private:
 
     static NodePtr rotateForInsert(NodePtr, int, int);
-    static bool rotate(NodePtr &, int);
+    static void rotate(NodePtr &, bool);
     static bool insertToNodeAndFix(NodePtr &, const Entry &);
-    static bool removeFromNodeAndFix(NodePtr &, const Entry &, bool &);
+    static bool removeFromNodeAndFix(NodePtr &, const Entry &);
 
-    static bool tryReduceBlack(NodePtr &);
+    static void replace(NodePtr &, NodePtr);
+    static NodePtr getBiggestAndFix(NodePtr &);
+    static void fixLackBlack(NodePtr &, int);
 
-    void inorderTestForRedTheory(NodePtr, int &);
-    void inorderTestForBlackTheory(NodePtr, int &, int &, int &);
+    bool inorderTestForRedTheory(NodePtr, int &);
+    int inorderTestForBlackTheory(NodePtr, int &);
+
+    static void inorderPrint(std::vector<std::stringstream *> &, const Node *,
+                             int);
 
     NodePtr root;
 
