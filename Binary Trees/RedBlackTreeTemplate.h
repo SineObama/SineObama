@@ -342,29 +342,23 @@ bool RedBlackTree<Entry>::removeFromNodeAndFix(NodePtr &parent,
     if (!parent)
         return false;
     assert(parent->color == red);
-    int num;
-    bool isBlack;
-    if (parent->data == x) {
-        if (!parent->child[0]) {
-            NodePtr tem = parent;
-            parent = parent->child[1];
-            delete tem;
-            return true;
-        }
-        num = 0;
-        isBlack = parent->child[0]->color == black;
-        parent->child[0]->color = red;
-        replace(parent, getBiggestAndFix(parent->child[0]));
-    } else {
-        num = parent->data < x;
-        if (!parent->child[num])
+    int num = parent->data < x;
+    bool equal = parent->data == x;
+    if (!parent->child[num]) {
+        if (!equal)
             return false;
-        isBlack = parent->child[num]->color == black;
-        parent->child[num]->color = red;
-        if (!removeFromNodeAndFix(parent->child[num], x)) {
-            parent->child[num]->color = isBlack ? black : red;
-            return false;
-        }
+        NodePtr tem = parent;
+        parent = parent->child[1];
+        delete tem;
+        return true;
+    }
+    bool isBlack = parent->child[num]->color == black;
+    parent->child[num]->color = red;
+    if (equal) {
+        replace(parent, removeBiggestAndFix(parent->child[0]));
+    } else if (!removeFromNodeAndFix(parent->child[num], x)) {
+        parent->child[num]->color = isBlack ? black : red;
+        return false;
     }
     if (!isBlack)
         return true;
@@ -385,7 +379,7 @@ void RedBlackTree<Entry>::replace(NodePtr &parent, NodePtr x) {
 }
 
 template<class Entry>
-typename RedBlackTree<Entry>::NodePtr RedBlackTree<Entry>::getBiggestAndFix(
+typename RedBlackTree<Entry>::NodePtr RedBlackTree<Entry>::removeBiggestAndFix(
         NodePtr &parent) {
     assert(parent->color == red);
     NodePtr back = NULL;
@@ -393,7 +387,7 @@ typename RedBlackTree<Entry>::NodePtr RedBlackTree<Entry>::getBiggestAndFix(
     if (child) {
         bool isBlack = child->color == black;
         child->color = red;
-        back = getBiggestAndFix(child);
+        back = removeBiggestAndFix(child);
         if (!isBlack)
             return back;
         if (child && child->color == red) {

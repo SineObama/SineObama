@@ -77,7 +77,7 @@ class RedBlackTree {
     static bool removeFromNodeAndFix(NodePtr &, const Entry &);
 
     static void replace(NodePtr &, NodePtr);
-    static NodePtr getBiggestAndFix(NodePtr &);
+    static NodePtr removeBiggestAndFix(NodePtr &);
     static void fixLackBlack(NodePtr &, int);
 
     bool inorderTestForRedTheory(NodePtr, int &);
