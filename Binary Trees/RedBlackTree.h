@@ -28,7 +28,6 @@ class RedBlackTree {
         Node *child[2];  // child[0] for left child, child[1] for right child
         Color color;
         Node(const Entry &, Color);
-        Node *&operator[](int);
     };
 
     typedef Node * NodePtr;

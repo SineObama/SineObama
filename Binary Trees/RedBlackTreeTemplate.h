@@ -15,23 +15,6 @@
 #include <stdexcept>
 #include "SineDebug.h"
 
-void visitIntEntry(const int *x) {
-    printf("%d ", *x);
-}
-
-//int visitIntNode(Sine::RedBlackTree<int>::constPtr x) {
-//    static int count = 0;
-//    if (x == NULL)
-//        return count;
-//    if (x->color == Sine::RedBlackTree<int>::black) {
-//        if (x->child[0] && x->child[0]->color == Sine::RedBlackTree<int>::black)
-//            if (x->child[1]
-//                    && x->child[1]->color == Sine::RedBlackTree<int>::black)
-//                count++;
-//    }
-//    return count;
-//}
-
 namespace Sine {
 
 template<class Entry>
@@ -39,12 +22,6 @@ RedBlackTree<Entry>::Node::Node(const Entry &x, Color c)
         : data(x),
           color(c) {
     child[1] = child[0] = NULL;
-}
-
-template<class Entry>
-typename RedBlackTree<Entry>::Node *&RedBlackTree<Entry>::Node::operator[](
-        int index) {
-    return child[index];
 }
 
 template<class Entry>
@@ -64,9 +41,7 @@ bool RedBlackTree<Entry>::insert(const Entry &x, bool recursive) {
 
 template<class Entry>
 bool RedBlackTree<Entry>::remove(const Entry &x, bool recursive) {
-    if (recursive)
-        return recursiveRemove(x);
-    return nonRecursiveRemove(x);
+    return recursive ? recursiveRemove(x) : nonRecursiveRemove(x);
 }
 
 template<class Entry>
@@ -413,27 +388,21 @@ void RedBlackTree<Entry>::fixLackBlack(NodePtr &parent, int num) {
         return;
     }
     NodePtr &same = another->child[num], &nosame = another->child[1 - num];
+    another->color = red;
     if (!same && !nosame) {
-        another->color = red;
         parent->color = black;
         return;
     }
     if (!same || !nosame) {
         if (!nosame)
             rotate(another, num);
-    } else {  // have two child
-        if (same->color == black && nosame->color == black) {
-            another->color = red;
+    } else if (nosame->color == black) {
+        if (same->color == black) {
             parent->color = black;
             return;
         }
-        if (same->color == red && nosame->color == black) {
-            another->color = red;
-            same->color = black;
-            rotate(another, num);
-        }
+        rotate(another, num);
     }
-    another->color = red;
     another->child[1 - num]->color = black;
     parent->color = black;
     rotate(parent, !num);
