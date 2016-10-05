@@ -17,6 +17,7 @@ class MD5 {
     typedef long long int size;
     typedef unsigned int word;
     typedef unsigned char data_t;
+    typedef unsigned char output_t;
 
     MD5();
 
@@ -29,8 +30,6 @@ class MD5 {
     // 传输终止，获取结果
     std::string get();
 
-    word leftCyclicShift(word X, int s);
-
  private:
 
     static const int A = 0x67452301;
@@ -38,22 +37,12 @@ class MD5 {
     static const int C = 0x98badcfe;
     static const int D = 0x10325476;
 
-    word a, b, c, d;
+    word state[4];
     size len;
     bool closed;
 
     // 传入512位直接进行加密
     void pass(data_t *);
-
-    void FF(word &a, word b, word c, word d, word Mj, word s, word ti);
-    void GG(word &a, word b, word c, word d, word Mj, word s, word ti);
-    void HH(word &a, word b, word c, word d, word Mj, word s, word ti);
-    void II(word &a, word b, word c, word d, word Mj, word s, word ti);
-
-    word F(word X, word Y, word Z);
-    word G(word X, word Y, word Z);
-    word H(word X, word Y, word Z);
-    word I(word X, word Y, word Z);
 
 };
 
