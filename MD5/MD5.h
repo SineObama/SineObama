@@ -17,17 +17,16 @@ class MD5 {
     typedef long long int size;
     typedef unsigned int word;
     typedef unsigned char data_t;
-    typedef unsigned char output_t;
 
     MD5();
 
-    // len为位长。
+    // 一次性加密。len为位长。
     MD5 &encrypt(data_t *data, size len);
 
     // 每次传入一组512位的数据。少于512位则暗示结束。
     void step(data_t *data, int len);
 
-    // 传输终止，获取结果
+    // 获取结果
     std::string get();
 
  private:

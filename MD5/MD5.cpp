@@ -39,17 +39,17 @@ void MD5::step(data_t *data, int len) {
         pass(data);
     } else {
         /* padding */
-        unsigned char s[64];
+        data_t s[64];
         memset(s, 0, 64);
         memcpy(s, data, (len + 7) / 8);
-        int *i = (int *) s;
-        s[len / 8] = (char) (1U << (7 - len % 8));
+        word *i = (word *) s;
+        s[len / 8] = (data_t) (1U << (7 - len % 8));
         if (len > 446) {
             pass(s);
             memset(s, 0, 64);
         }
-        i[14] = (int) this->len;
-        i[15] = (int) (this->len >> 32);
+        i[14] = (word) this->len;
+        i[15] = (word) (this->len >> 32);
         pass(s);
         closed = true;
     }
@@ -60,11 +60,11 @@ std::string MD5::get() {
         step(NULL, 0);
     closed = true;
     std::string rtn;
-    output_t *ss = (output_t *) state;
+    unsigned char *ss = (unsigned char *) state;
     char s[10] = { };
     for (int i = 0; i < 16; i++) {
         sprintf(s, "%02x", ss[i]);
-        rtn = rtn + s;
+        rtn += s;
     }
     return rtn;
 }
