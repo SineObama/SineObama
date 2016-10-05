@@ -5,11 +5,13 @@
  *      Author: Sine
  */
 
+// this is quite low
+
 #include <cstdio>
 #include <iostream>
 
 int main() {
-    int t = 0;
+    long long int t = 0;
     double Pi = 0.0;
     while (++t) {
         if (t % 2) {
@@ -17,7 +19,8 @@ int main() {
         } else {
             Pi -= 1.0 / (2 * t - 1);
         }
-        printf("%llf\n", 4 * Pi);
+        if (t % 1000000l == 0)
+        printf("%.20llf   t:%lld\n", 4 * Pi, t);
     }
     return 0;
 }

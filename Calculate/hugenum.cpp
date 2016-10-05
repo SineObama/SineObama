@@ -6,7 +6,7 @@
  */
 
 #include "hugenum.h"
-#include "D:\\others\\workspace\\sine_debug.h"
+#include "..\\sine_debug.h"
 #include <stdexcept>
 #include <vector>
 
