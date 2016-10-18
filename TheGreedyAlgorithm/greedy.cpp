@@ -9,6 +9,7 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <cstring>
 #include "View.h"
 
 using namespace std;
@@ -34,28 +35,38 @@ int main(int argc, char **argv) {
     ifstream ifs(inputFile.c_str());
     int n;  // view的数目
     ifs >> n;
-    View *views = new View[n], *top = NULL;
-    int maxCost = 0;  // 假定最大消耗的是top view，并假设数据中top view不一定在第一个
-    for (int i = 0; i < n; i++) {
-        ifs >> views[i].id >> views[i].cost;
-        if (maxCost < views[i].cost) {
-            maxCost = views[i].cost;
-            top = &views[i];
-        }
+    View *views = new View[n];  // 顺序存储标号为1到n的view
+    View *top = NULL;
+    for (int i = 0; i < n; i++) {  // 假定n个view编号为1到n，但是可能不按顺序
+        int sub;
+        ifs >> sub;
+        views[sub - 1].id = sub;
+        ifs >> views[sub - 1].cost;
     }
     int m;  // 边的数目
     ifs >> m;
+    int *pointed = new int[n];  // 标记没有被指向的节点，用于寻找top view
+    memset(pointed, 0, sizeof(int) * n);
     for (int i = 0; i < m; i++) {
         int src, dst;
         ifs >> src >> dst;
         views[src - 1].childs.insert(&views[dst - 1]);
+        pointed[dst - 1] = 1;
     }
+    for (int i = 0; i < n; i++) {  // 寻找top view
+        if (!pointed[i]) {
+            top = &views[i];
+            break;
+        }
+    }
+    delete[] pointed;
 
     // 算法开始
     int *output = new int[k + 1], count = 0;  // 输出的id及个数
     output[count++] = top->id;  // 默认加入top view
     top->choosed = true;
     // 设置每个view的“当前消耗”
+    int maxCost = top->cost;
     for (int i = 0; i < n; i++) {
         views[i].curCost = maxCost;
     }
