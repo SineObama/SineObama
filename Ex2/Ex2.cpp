@@ -16,7 +16,7 @@ using namespace std;
 void Ex2()
 {
     CImg<unsigned char> SrcImg;
-    for (char i = '2'; i <='5';i++) {
+    for (char i = '2'; i <='2';i++) {
         char s[100]={"1.bmp"};
         s[0] = i;
         SrcImg.load_bmp(s);
