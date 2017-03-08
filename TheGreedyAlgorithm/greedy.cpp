@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
                 continue;
             int B = views[j].getB(views[j].cost);  // get the B(v, S)
 //            cout << i + 1 << " " << views[j].id << " " << B << "\n";
-            if (maxB < B) {
+            if (maxB <= B) {
                 maxB = B;
                 choosed = &views[j];
             }

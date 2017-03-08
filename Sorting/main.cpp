@@ -58,8 +58,8 @@ int main() {
 //        test(HeapSort, s, s + len, comp, test_t);
 //        test(InsertionSort, s, s + len, comp, test_t);
 //        test(MergeSort, s, s + len, comp, test_t);
-        test(QuickSort, s, s + len, comp, test_t);
-        test(QuickSort1, s, s + len, comp, test_t);
+//        test(QuickSort, s, s + len, comp, test_t);
+//        test(QuickSort1, s, s + len, comp, test_t);
         test(QuickSortStandard, s, s + len, comp, test_t);
 //        test(QuickSort1_1, s, s + len, comp, test_t);
 //        test(QuickSort1_2, s, s + len, comp, test_t);
