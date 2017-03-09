@@ -21,13 +21,17 @@ void Ex2()
         s[0] = i;
         SrcImg.load_bmp(s);
         SrcImg.display();
-        MyCanny::myCanny(SrcImg).display();
+        MyCanny::myCanny(SrcImg, 2.5f, 7.5f, 2.0f, 16, 1).display();
     }
 }
+
+void tem(const CImg<unsigned char> & a) {}
 
 int main(int argc, _TCHAR* argv[])
 {
 	Ex2();
+    CImg<unsigned char> SrcImg;
+	tem(SrcImg);
 
 	return 0;
 }

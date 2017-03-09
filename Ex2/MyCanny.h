@@ -31,9 +31,63 @@
 #define MAGNITUDE_MAX ((int) (MAGNITUDE_SCALE * MAGNITUDE_LIMIT))
 
 class MyCanny {
+
+ public:
+
+    typedef cimg_library::CImg<unsigned char> Img;
+
+    static Img myCanny(const Img &grey) {
+        return myCanny(grey, 2.5f, 7.5f, 2.0f, 16, 0);
+    }
+
+    /*
+     Canny edge detection with parameters passed in by user
+     Params: grey - the greyscale image
+     width, height - image dimensions
+     lowthreshold - default 2.5
+     highthreshold - default 7.5
+     gaussiankernelradius - radius of edge detection Gaussian, in standard deviations
+     (default 2.0)
+     gaussiankernelwidth - width of Gaussian kernel, in pixels (default 16)
+     contrastnormalised - flag to normalise image before edge detection (defualt 0)
+     Returns: binary image with set pixels as edges
+
+     */
+    static Img myCanny(const Img &grey, float lowthreshold, float highthreshold,
+                       float gaussiankernelradius, int gaussiankernelwidth,
+                       int contrastnormalised) {
+
+        CANNY *can = 0;
+        int w = grey.width(), h = grey.height();
+        Img tem(grey);
+
+        if (contrastnormalised)
+            normalizeContrast(tem, w, h);
+        can = allocatebuffers(tem, w, h);
+        if (!can)
+            throw;
+
+        int err;
+        err = computeGradients(can, gaussiankernelradius, gaussiankernelwidth);
+        if (err < 0)
+            throw;
+        int low, high;
+        low = (int) (lowthreshold * MAGNITUDE_SCALE + 0.5f);
+        high = (int) (highthreshold * MAGNITUDE_SCALE + 0.5f);
+        performHysteresis(can, low, high);
+
+        Img answer(w, h, 1, 1);
+        for (int i = 0; i < w * h; i++)
+            answer[i] = can->idata[i] > 0 ? 1 : 0;
+
+        killbuffers(can);
+        return answer;
+    }
+
+ private:
+
     MyCanny();
     virtual ~MyCanny();
-
 
     typedef struct {
         unsigned char *data; /* input image */
@@ -49,70 +103,22 @@ class MyCanny {
 
     static CANNY *allocatebuffers(unsigned char *grey, int width, int height);
     static void killbuffers(CANNY *can);
-    static int computeGradients(CANNY *can, float kernelRadius, int kernelWidth);
+    static int computeGradients(CANNY *can, float kernelRadius,
+                                int kernelWidth);
     static void performHysteresis(CANNY *can, int low, int high);
     static void follow(CANNY *can, int x1, int y1, int i1, int threshold);
 
-    static void normalizeContrast(unsigned char *data, int width, int height);
+    static void normalizeContrast(Img data, int width, int height);
     static float hypotenuse(float x, float y);
     static float gaussian(float x, float sigma);
 
- public:
-    /*
-     Canny edge detection with parameters passed in by user
-     Params: grey - the greyscale image
-     width, height - image dimensions
-     lowthreshold - default 2.5
-     highthreshold - default 7.5
-     gaussiankernelradius - radius of edge detection Gaussian, in standard deviations
-     (default 2.0)
-     gaussiankernelwidth - width of Gaussian kernel, in pixels (default 16)
-     contrastnormalised - flag to normalise image before edge detection (defualt 0)
-     Returns: binary image with set pixels as edges
-
-     */
-    template<class T>
-    static cimg_library::CImg<T> myCanny(cimg_library::CImg<T> &grey,
-                                         float lowthreshold = 2.5f,
-                                         float highthreshold = 7.5f,
-                                         float gaussiankernelradius = 2.0f,
-                                         int gaussiankernelwidth = 16,
-                                         int contrastnormalised = 0) {
-
-        CANNY *can = 0;
-        cimg_library::CImg<T> answer(grey.width(), grey.height(), 1, 1);
-        int low, high;
-        int err;
-        int i;
-
-        can = allocatebuffers(grey, grey.width(), grey.height());
-        if (!can)
-            goto error_exit;
-        if (contrastnormalised)
-            normalizeContrast(can->data, grey.width(), grey.height());
-
-        err = computeGradients(can, gaussiankernelradius, gaussiankernelwidth);
-        if (err < 0)
-            goto error_exit;
-        low = (int) (lowthreshold * MAGNITUDE_SCALE + 0.5f);
-        high = (int) (highthreshold * MAGNITUDE_SCALE + 0.5f);
-        performHysteresis(can, low, high);
-        for (i = 0; i < grey.width() * grey.height(); i++)
-            answer[i] = can->idata[i] > 0 ? 1 : 0;
-
-        killbuffers(can);
-        return answer;
-        error_exit:
-        killbuffers(can);
-        throw;
-    }
 };
-
 
 /*
  buffer allocation
  */
-MyCanny::CANNY *MyCanny::allocatebuffers(unsigned char *grey, int width, int height) {
+MyCanny::CANNY *MyCanny::allocatebuffers(unsigned char *grey, int width,
+                                         int height) {
     CANNY *answer;
 
     answer = (CANNY*) malloc(sizeof(CANNY));
@@ -408,7 +414,7 @@ void MyCanny::follow(CANNY *can, int x1, int y1, int i1, int threshold) {
     }
 }
 
-void MyCanny::normalizeContrast(unsigned char *data, int width, int height) {
+void MyCanny::normalizeContrast(Img data, int width, int height) {
     int histogram[256] = { 0 };
     int remap[256];
     int sum = 0;
