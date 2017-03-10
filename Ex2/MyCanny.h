@@ -32,63 +32,20 @@
 
 class MyCanny {
 
+
  public:
 
-    typedef cimg_library::CImg<unsigned char> Img;
-
-    static Img myCanny(const Img &grey) {
-        return myCanny(grey, 2.5f, 7.5f, 2.0f, 16, 0);
-    }
-
-    /*
-     Canny edge detection with parameters passed in by user
-     Params: grey - the greyscale image
-     width, height - image dimensions
-     lowthreshold - default 2.5
-     highthreshold - default 7.5
-     gaussiankernelradius - radius of edge detection Gaussian, in standard deviations
-     (default 2.0)
-     gaussiankernelwidth - width of Gaussian kernel, in pixels (default 16)
-     contrastnormalised - flag to normalise image before edge detection (defualt 0)
-     Returns: binary image with set pixels as edges
-
-     */
-    static Img myCanny(const Img &grey, float lowthreshold, float highthreshold,
-                       float gaussiankernelradius, int gaussiankernelwidth,
-                       int contrastnormalised) {
-
-        CANNY *can = 0;
-        int w = grey.width(), h = grey.height();
-        Img tem(grey);
-
-        if (contrastnormalised)
-            normalizeContrast(tem, w, h);
-        can = allocatebuffers(tem, w, h);
-        if (!can)
-            throw;
-
-        int err;
-        err = computeGradients(can, gaussiankernelradius, gaussiankernelwidth);
-        if (err < 0)
-            throw;
-        int low, high;
-        low = (int) (lowthreshold * MAGNITUDE_SCALE + 0.5f);
-        high = (int) (highthreshold * MAGNITUDE_SCALE + 0.5f);
-        performHysteresis(can, low, high);
-
-        Img answer(w, h, 1, 1);
-        for (int i = 0; i < w * h; i++)
-            answer[i] = can->idata[i] > 0 ? 1 : 0;
-
-        killbuffers(can);
-        return answer;
-    }
+    static void myCanny(const char *filename);
+    static void myCanny(const char *filename, float lowthreshold,
+                        float highthreshold, float gaussiankernelradius,
+                        int gaussiankernelwidth, int contrastnormalised);
 
  private:
 
     MyCanny();
     virtual ~MyCanny();
 
+    typedef cimg_library::CImg<unsigned char> Img;
     typedef struct {
         unsigned char *data; /* input image */
         int width;
@@ -103,16 +60,55 @@ class MyCanny {
 
     static CANNY *allocatebuffers(unsigned char *grey, int width, int height);
     static void killbuffers(CANNY *can);
-    static int computeGradients(CANNY *can, float kernelRadius,
-                                int kernelWidth);
+    static void computeGradients(CANNY *can, float kernelRadius,
+                                 int kernelWidth);
     static void performHysteresis(CANNY *can, int low, int high);
     static void follow(CANNY *can, int x1, int y1, int i1, int threshold);
 
+    static Img toGreyScale(Img);
     static void normalizeContrast(Img data, int width, int height);
     static float hypotenuse(float x, float y);
     static float gaussian(float x, float sigma);
 
 };
+
+void MyCanny::myCanny(const char *filename) {
+    myCanny(filename, 2.5f, 7.5f, 2.0f, 16, 0);
+}
+
+void MyCanny::myCanny(const char *filename, float lowthreshold,
+                      float highthreshold, float gaussiankernelradius,
+                      int gaussiankernelwidth, int contrastnormalised) {
+    Img img(filename);
+    img.display("source");
+    if (img.spectrum() != 1) {
+        img = toGreyScale(img);
+        img.display("greyscale");
+    }
+
+    int w = img.width(), h = img.height();
+    if (contrastnormalised) {
+        normalizeContrast(img, w, h);
+        img.display("contrastnormalised");
+    }
+
+    CANNY *can = allocatebuffers(img, w, h);
+    if (!can)
+        throw;
+
+    computeGradients(can, gaussiankernelradius, gaussiankernelwidth);
+    int low = (int) (lowthreshold * MAGNITUDE_SCALE + 0.5f);
+    int high = (int) (highthreshold * MAGNITUDE_SCALE + 0.5f);
+    performHysteresis(can, low, high);
+
+    Img answer(w, h, 1, 1);
+    for (int i = 0; i < w * h; i++)
+        answer[i] = can->idata[i] > 0 ? 1 : 0;
+
+    killbuffers(can);
+    answer.display();
+    return;
+}
 
 /*
  buffer allocation
@@ -171,7 +167,8 @@ void MyCanny::killbuffers(CANNY *can) {
  contact me for an alternative, though less efficient, implementation.
  */
 
-int MyCanny::computeGradients(CANNY *can, float kernelRadius, int kernelWidth) {
+void MyCanny::computeGradients(CANNY *can, float kernelRadius,
+                               int kernelWidth) {
     float *kernel;
     float *diffKernel;
     int kwidth;
@@ -193,7 +190,7 @@ int MyCanny::computeGradients(CANNY *can, float kernelRadius, int kernelWidth) {
     kernel = (float *) malloc(kernelWidth * sizeof(float));
     diffKernel = (float *) malloc(kernelWidth * sizeof(float));
     if (!kernel || !diffKernel)
-        goto error_exit;
+        throw;
 
     /* initialise the Gaussian kernel */
     for (kwidth = 0; kwidth < kernelWidth; kwidth++) {
@@ -235,8 +232,9 @@ int MyCanny::computeGradients(CANNY *can, float kernelRadius, int kernelWidth) {
             can->yConv[index] = sumY;
             can->xConv[index] = sumX;
         }
-
     }
+    free(kernel);
+    free(diffKernel);
 
     for (x = initX; x < maxX; x++) {
         for (y = initY; y < maxY; y += width) {
@@ -245,7 +243,6 @@ int MyCanny::computeGradients(CANNY *can, float kernelRadius, int kernelWidth) {
             for (i = 1; i < kwidth; i++)
                 sum += diffKernel[i]
                         * (can->yConv[index - i] - can->yConv[index + i]);
-
             can->xGradient[index] = sum;
         }
 
@@ -365,12 +362,7 @@ int MyCanny::computeGradients(CANNY *can, float kernelRadius, int kernelWidth) {
             }
         }
     }
-    free(kernel);
-    free(diffKernel);
-    return 0;
-    error_exit: free(kernel);
-    free(diffKernel);
-    return -1;
+    return;
 }
 
 /*
@@ -412,6 +404,18 @@ void MyCanny::follow(CANNY *can, int x1, int y1, int i1, int threshold) {
                 follow(can, x, y, i2, threshold);
         }
     }
+}
+
+MyCanny::Img MyCanny::toGreyScale(Img img) {
+    Img grey(img.width(), img.height(), 1, 1);
+    cimg_forXY(grey, x, y)
+    {
+        int r = img(x, y, 0);
+        int g = img(x, y, 1);
+        int b = img(x, y, 2);
+        grey(x, y) = (r * 0.2126 + g * 0.7152 + b * 0.0722);
+    }
+    return grey;
 }
 
 void MyCanny::normalizeContrast(Img data, int width, int height) {
