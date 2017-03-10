@@ -46,17 +46,9 @@ class MyCanny {
 
     typedef cimg_library::CImg<unsigned char> Img;
     typedef cimg_library::CImg<int> IntMat;
-    typedef struct {
-        unsigned char *data; /* input image */
-        float *xConv; /* temporary for convolution in x direction */
-        float *yConv; /* temporary for convolution in y direction */
-        float *xGradient; /* gradients in x direction, as detected by Gaussians */
-        float *yGradient; /* gradients in x direction,a s detected by Gaussians */
-    } CANNY;
+    typedef cimg_library::CImg<float> FMat;
 
-    static CANNY *allocatebuffers(unsigned char *grey, int width, int height);
-    static void killbuffers(CANNY *can);
-    static IntMat computeGradients(Img, float kernelRadius, int kernelWidth);
+    static IntMat computeGradients(Img &, float kernelRadius, int kernelWidth);
     static IntMat performHysteresis(const IntMat &mat, int low, int high);
     static void follow(IntMat &idata, const IntMat &mat, int x1, int y1, int i1,
                        int threshold);
@@ -102,45 +94,6 @@ void MyCanny::myCanny(const char *filename, float lowthreshold,
     return;
 }
 
-/*
- buffer allocation
- */
-MyCanny::CANNY *MyCanny::allocatebuffers(unsigned char *grey, int width,
-                                         int height) {
-    CANNY *answer;
-
-    answer = (CANNY*) malloc(sizeof(CANNY));
-    if (!answer)
-        goto error_exit;
-    answer->data = (unsigned char *) malloc(width * height);
-    answer->xConv = (float *) malloc(width * height * sizeof(float));
-    answer->yConv = (float *) malloc(width * height * sizeof(float));
-    answer->xGradient = (float *) malloc(width * height * sizeof(float));
-    answer->yGradient = (float *) malloc(width * height * sizeof(float));
-    if (!answer->data || !answer->xConv || !answer->yConv || !answer->xGradient
-            || !answer->yGradient)
-        goto error_exit;
-
-    memcpy(answer->data, grey, width * height);
-
-    return answer;
-    error_exit: killbuffers(answer);
-    return 0;
-}
-
-/*
- buffers destructor
- */
-void MyCanny::killbuffers(CANNY *can) {
-    if (can) {
-        free(can->data);
-        free(can->xConv);
-        free(can->yConv);
-        free(can->xGradient);
-        free(can->yGradient);
-    }
-}
-
 /* NOTE: The elements of the method below (specifically the technique for
  non-maximal suppression and the technique for gradient computation)
  are derived from an implementation posted in the following forum (with the
@@ -152,13 +105,15 @@ void MyCanny::killbuffers(CANNY *can) {
  someone's intellectual property rights. If this concerns you feel free to
  contact me for an alternative, though less efficient, implementation.
  */
-
-MyCanny::IntMat MyCanny::computeGradients(Img img, float kernelRadius,
+MyCanny::IntMat MyCanny::computeGradients(Img &data, float kernelRadius,
                                           int kernelWidth) {
-    int width = img.width(), height = img.height();
-    CANNY *can = allocatebuffers(img, width, height);
-    float *kernel;
-    float *diffKernel;
+    int width = data.width(), height = data.height();
+
+    FMat xConv(width, height); /* temporary for convolution in x direction */
+    FMat yConv(width, height); /* temporary for convolution in y direction */
+    FMat xGradient(width, height); /* gradients in x direction, as detected by Gaussians */
+    FMat yGradient(width, height); /* gradients in x direction,a s detected by Gaussians */
+
     int kwidth;
 
     int initX;
@@ -166,14 +121,10 @@ MyCanny::IntMat MyCanny::computeGradients(Img img, float kernelRadius,
     int initY;
     int maxY;
 
-    int x, y;
-    int i;
     int flag;
 
-    kernel = (float *) malloc(kernelWidth * sizeof(float));
-    diffKernel = (float *) malloc(kernelWidth * sizeof(float));
-    if (!kernel || !diffKernel)
-        throw;
+    FMat kernel(kernelWidth);
+    FMat diffKernel (kernelWidth);
 
     /* initialise the Gaussian kernel */
     for (kwidth = 0; kwidth < kernelWidth; kwidth++) {
@@ -194,67 +145,54 @@ MyCanny::IntMat MyCanny::computeGradients(Img img, float kernelRadius,
     maxY = width * (height - (kwidth - 1));
 
     /* perform convolution in x and y directions */
-    for (x = initX; x < maxX; x++) {
-        for (y = initY; y < maxY; y += width) {
+    for (int x = initX; x < maxX; x++) {
+        for (int y = initY; y < maxY; y += width) {
             int index = x + y;
-            float sumX = can->data[index] * kernel[0];
+            float sumX = data[index] * kernel[0];
             float sumY = sumX;
             int xOffset = 1;
             int yOffset = width;
             while (xOffset < kwidth) {
                 sumY += kernel[xOffset]
-                        * (can->data[index - yOffset]
-                                + can->data[index + yOffset]);
+                        * (data[index - yOffset] + data[index + yOffset]);
                 sumX += kernel[xOffset]
-                        * (can->data[index - xOffset]
-                                + can->data[index + xOffset]);
+                        * (data[index - xOffset] + data[index + xOffset]);
                 yOffset += width;
                 xOffset++;
             }
-
-            can->yConv[index] = sumY;
-            can->xConv[index] = sumX;
+            yConv[index] = sumY;
+            xConv[index] = sumX;
         }
     }
-    free(kernel);
-    free(diffKernel);
 
-    for (x = initX; x < maxX; x++) {
-        for (y = initY; y < maxY; y += width) {
+    for (int x = initX; x < maxX; x++) {
+        for (int y = initY; y < maxY; y += width) {
             float sum = 0.0f;
             int index = x + y;
-            for (i = 1; i < kwidth; i++)
-                sum += diffKernel[i]
-                        * (can->yConv[index - i] - can->yConv[index + i]);
-            can->xGradient[index] = sum;
+            for (int i = 1; i < kwidth; i++)
+                sum += diffKernel[i] * (yConv[index - i] - yConv[index + i]);
+            xGradient[index] = sum;
         }
-
     }
 
-    for (x = kwidth; x < width - kwidth; x++) {
-        for (y = initY; y < maxY; y += width) {
+    for (int x = kwidth; x < width - kwidth; x++) {
+        for (int y = initY; y < maxY; y += width) {
             float sum = 0.0f;
             int index = x + y;
-            int yOffset = width;
-            for (i = 1; i < kwidth; i++) {
+            for (int i = 1, yOffset = width; i < kwidth; i++, yOffset += width)
                 sum += diffKernel[i]
-                        * (can->xConv[index - yOffset]
-                                - can->xConv[index + yOffset]);
-                yOffset += width;
-            }
-
-            can->yGradient[index] = sum;
+                        * (xConv[index - yOffset] - xConv[index + yOffset]);
+            yGradient[index] = sum;
         }
-
     }
 
-    IntMat magnitude(width, height, 1, 1);
+    IntMat magnitude(width, height);
     initX = kwidth;
     maxX = width - kwidth;
     initY = width * kwidth;
     maxY = width * (height - kwidth);
-    for (x = initX; x < maxX; x++) {
-        for (y = initY; y < maxY; y += width) {
+    for (int x = initX; x < maxX; x++) {
+        for (int y = initY; y < maxY; y += width) {
             int index = x + y;
             int indexN = index - width;
             int indexS = index + width;
@@ -265,27 +203,19 @@ MyCanny::IntMat MyCanny::computeGradients(Img img, float kernelRadius,
             int indexSW = indexS - 1;
             int indexSE = indexS + 1;
 
-            float xGrad = can->xGradient[index];
-            float yGrad = can->yGradient[index];
+            float xGrad = xGradient[index];
+            float yGrad = yGradient[index];
             float gradMag = hypotenuse(xGrad, yGrad);
 
             /* perform non-maximal supression */
-            float nMag = hypotenuse(can->xGradient[indexN],
-                                    can->yGradient[indexN]);
-            float sMag = hypotenuse(can->xGradient[indexS],
-                                    can->yGradient[indexS]);
-            float wMag = hypotenuse(can->xGradient[indexW],
-                                    can->yGradient[indexW]);
-            float eMag = hypotenuse(can->xGradient[indexE],
-                                    can->yGradient[indexE]);
-            float neMag = hypotenuse(can->xGradient[indexNE],
-                                     can->yGradient[indexNE]);
-            float seMag = hypotenuse(can->xGradient[indexSE],
-                                     can->yGradient[indexSE]);
-            float swMag = hypotenuse(can->xGradient[indexSW],
-                                     can->yGradient[indexSW]);
-            float nwMag = hypotenuse(can->xGradient[indexNW],
-                                     can->yGradient[indexNW]);
+            float nMag = hypotenuse(xGradient[indexN], yGradient[indexN]);
+            float sMag = hypotenuse(xGradient[indexS], yGradient[indexS]);
+            float wMag = hypotenuse(xGradient[indexW], yGradient[indexW]);
+            float eMag = hypotenuse(xGradient[indexE], yGradient[indexE]);
+            float neMag = hypotenuse(xGradient[indexNE], yGradient[indexNE]);
+            float seMag = hypotenuse(xGradient[indexSE], yGradient[indexSE]);
+            float swMag = hypotenuse(xGradient[indexSW], yGradient[indexSW]);
+            float nwMag = hypotenuse(xGradient[indexNW], yGradient[indexNW]);
             float tmp;
             /*
              * An explanation of what's happening here, for those who want
@@ -346,7 +276,6 @@ MyCanny::IntMat MyCanny::computeGradients(Img img, float kernelRadius,
             }
         }
     }
-    killbuffers(can);
     return magnitude;
 }
 
@@ -390,7 +319,7 @@ void MyCanny::follow(IntMat &idata, const IntMat &mat, int x1, int y1, int i1,
 }
 
 MyCanny::Img MyCanny::toGreyScale(Img img) {
-    Img grey(img.width(), img.height(), 1, 1);
+    Img grey(img.width(), img.height());
     cimg_forXY(grey, x, y)
     {
         int r = img(x, y, 0);

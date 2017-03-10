@@ -14,10 +14,10 @@ using namespace std;
 
 void Ex2()
 {
-    for (char i = '2'; i <='2';i++) {
+    for (char i = '2'; i <='5';i++) {
         char s[100]={"1.bmp"};
         s[0] = i;
-        MyCanny::myCanny(s, 2.5f, 7.5f, 2.0f, 16, 1);
+        MyCanny::myCanny(s, 1, 3, 2.0f, 16, 0);
     }
 }
 
