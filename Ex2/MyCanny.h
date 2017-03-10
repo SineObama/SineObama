@@ -32,7 +32,6 @@
 
 class MyCanny {
 
-
  public:
 
     static void myCanny(const char *filename);
@@ -46,12 +45,9 @@ class MyCanny {
     virtual ~MyCanny();
 
     typedef cimg_library::CImg<unsigned char> Img;
+    typedef cimg_library::CImg<int> IntMat;
     typedef struct {
         unsigned char *data; /* input image */
-        int width;
-        int height;
-        int *idata; /* output for edges */
-        int *magnitude; /* edge magnitude as detected by Gaussians */
         float *xConv; /* temporary for convolution in x direction */
         float *yConv; /* temporary for convolution in y direction */
         float *xGradient; /* gradients in x direction, as detected by Gaussians */
@@ -60,10 +56,10 @@ class MyCanny {
 
     static CANNY *allocatebuffers(unsigned char *grey, int width, int height);
     static void killbuffers(CANNY *can);
-    static void computeGradients(CANNY *can, float kernelRadius,
-                                 int kernelWidth);
-    static void performHysteresis(CANNY *can, int low, int high);
-    static void follow(CANNY *can, int x1, int y1, int i1, int threshold);
+    static IntMat computeGradients(Img, float kernelRadius, int kernelWidth);
+    static IntMat performHysteresis(const IntMat &mat, int low, int high);
+    static void follow(IntMat &idata, const IntMat &mat, int x1, int y1, int i1,
+                       int threshold);
 
     static Img toGreyScale(Img);
     static void normalizeContrast(Img data, int width, int height);
@@ -92,21 +88,17 @@ void MyCanny::myCanny(const char *filename, float lowthreshold,
         img.display("contrastnormalised");
     }
 
-    CANNY *can = allocatebuffers(img, w, h);
-    if (!can)
-        throw;
-
-    computeGradients(can, gaussiankernelradius, gaussiankernelwidth);
-    int low = (int) (lowthreshold * MAGNITUDE_SCALE + 0.5f);
-    int high = (int) (highthreshold * MAGNITUDE_SCALE + 0.5f);
-    performHysteresis(can, low, high);
+    IntMat mat = computeGradients(img, gaussiankernelradius,
+                                  gaussiankernelwidth);
+    IntMat idata = performHysteresis(mat,
+                                     (lowthreshold * MAGNITUDE_SCALE + 0.5f),
+                                     (highthreshold * MAGNITUDE_SCALE + 0.5f));
 
     Img answer(w, h, 1, 1);
     for (int i = 0; i < w * h; i++)
-        answer[i] = can->idata[i] > 0 ? 1 : 0;
+        answer[i] = idata[i] > 0 ? 1 : 0;
+    answer.display("final");
 
-    killbuffers(can);
-    answer.display();
     return;
 }
 
@@ -121,19 +113,15 @@ MyCanny::CANNY *MyCanny::allocatebuffers(unsigned char *grey, int width,
     if (!answer)
         goto error_exit;
     answer->data = (unsigned char *) malloc(width * height);
-    answer->idata = (int *) malloc(width * height * sizeof(int));
-    answer->magnitude = (int *) malloc(width * height * sizeof(int));
     answer->xConv = (float *) malloc(width * height * sizeof(float));
     answer->yConv = (float *) malloc(width * height * sizeof(float));
     answer->xGradient = (float *) malloc(width * height * sizeof(float));
     answer->yGradient = (float *) malloc(width * height * sizeof(float));
-    if (!answer->data || !answer->idata || !answer->magnitude || !answer->xConv
-            || !answer->yConv || !answer->xGradient || !answer->yGradient)
+    if (!answer->data || !answer->xConv || !answer->yConv || !answer->xGradient
+            || !answer->yGradient)
         goto error_exit;
 
     memcpy(answer->data, grey, width * height);
-    answer->width = width;
-    answer->height = height;
 
     return answer;
     error_exit: killbuffers(answer);
@@ -146,8 +134,6 @@ MyCanny::CANNY *MyCanny::allocatebuffers(unsigned char *grey, int width,
 void MyCanny::killbuffers(CANNY *can) {
     if (can) {
         free(can->data);
-        free(can->idata);
-        free(can->magnitude);
         free(can->xConv);
         free(can->yConv);
         free(can->xGradient);
@@ -167,13 +153,13 @@ void MyCanny::killbuffers(CANNY *can) {
  contact me for an alternative, though less efficient, implementation.
  */
 
-void MyCanny::computeGradients(CANNY *can, float kernelRadius,
-                               int kernelWidth) {
+MyCanny::IntMat MyCanny::computeGradients(Img img, float kernelRadius,
+                                          int kernelWidth) {
+    int width = img.width(), height = img.height();
+    CANNY *can = allocatebuffers(img, width, height);
     float *kernel;
     float *diffKernel;
     int kwidth;
-
-    int width, height;
 
     int initX;
     int maxX;
@@ -183,9 +169,6 @@ void MyCanny::computeGradients(CANNY *can, float kernelRadius,
     int x, y;
     int i;
     int flag;
-
-    width = can->width;
-    height = can->height;
 
     kernel = (float *) malloc(kernelWidth * sizeof(float));
     diffKernel = (float *) malloc(kernelWidth * sizeof(float));
@@ -265,6 +248,7 @@ void MyCanny::computeGradients(CANNY *can, float kernelRadius,
 
     }
 
+    IntMat magnitude(width, height, 1, 1);
     initX = kwidth;
     maxX = width - kwidth;
     initY = width * kwidth;
@@ -350,7 +334,7 @@ void MyCanny::computeGradients(CANNY *can, float kernelRadius,
                       && tmp > ffabs(xGrad * nwMag + (yGrad - xGrad) * nMag) /*(4)*/
             );
             if (flag) {
-                can->magnitude[index] =
+                magnitude[index] =
                         (gradMag >= MAGNITUDE_LIMIT) ?
                                 MAGNITUDE_MAX :
                                 (int) (MAGNITUDE_SCALE * gradMag);
@@ -358,50 +342,49 @@ void MyCanny::computeGradients(CANNY *can, float kernelRadius,
                  implementation. It is a simple matter to compute it at
                  this point as: Math.atan2(yGrad, xGrad); */
             } else {
-                can->magnitude[index] = 0;
+                magnitude[index] = 0;
             }
         }
     }
-    return;
+    killbuffers(can);
+    return magnitude;
 }
 
 /*
  we follow edges. high gives the parameter for starting an edge,
  how the parameter for continuing it.
  */
-void MyCanny::performHysteresis(CANNY *can, int low, int high) {
-    int offset = 0;
-    int x, y;
+MyCanny::IntMat MyCanny::performHysteresis(const IntMat &magnitude, int low,
+                                           int high) {
 
-    memset(can->idata, 0, can->width * can->height * sizeof(int));
+    int w = magnitude.width(), h = magnitude.height();
+    IntMat idata(w, h, 1, 1);
 
-    for (y = 0; y < can->height; y++) {
-        for (x = 0; x < can->width; x++) {
-            if (can->idata[offset] == 0 && can->magnitude[offset] >= high)
-                follow(can, x, y, offset, low);
-            offset++;
-        }
-    }
+    for (int offset = 0, y = 0; y < h; y++)
+        for (int x = 0; x < w; x++, offset++)
+            if (idata[offset] == 0 && magnitude[offset] >= high)
+                follow(idata, magnitude, x, y, offset, low);
+    return idata;
 }
 
 /*
  recursive portion of edge follower
  */
 
-void MyCanny::follow(CANNY *can, int x1, int y1, int i1, int threshold) {
+void MyCanny::follow(IntMat &idata, const IntMat &mat, int x1, int y1, int i1,
+                     int threshold) {
     int x, y;
     int x0 = x1 == 0 ? x1 : x1 - 1;
-    int x2 = x1 == can->width - 1 ? x1 : x1 + 1;
+    int x2 = x1 == mat.width() - 1 ? x1 : x1 + 1;
     int y0 = y1 == 0 ? y1 : y1 - 1;
-    int y2 = y1 == can->height - 1 ? y1 : y1 + 1;
+    int y2 = y1 == mat.height() - 1 ? y1 : y1 + 1;
 
-    can->idata[i1] = can->magnitude[i1];
+    idata[i1] = mat[i1];
     for (x = x0; x <= x2; x++) {
         for (y = y0; y <= y2; y++) {
-            int i2 = x + y * can->width;
-            if ((y != y1 || x != x1) && can->idata[i2] == 0
-                    && can->magnitude[i2] >= threshold)
-                follow(can, x, y, i2, threshold);
+            int i2 = x + y * mat.width();
+            if ((y != y1 || x != x1) && idata[i2] == 0 && mat[i2] >= threshold)
+                follow(idata, mat, x, y, i2, threshold);
         }
     }
 }
