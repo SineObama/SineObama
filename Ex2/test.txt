@@ -1,0 +1,6 @@
+stpietro.bmp 3 6 1 8 0
+stpietro.bmp 3 6 1 8 1
+stpietro.bmp 3 3 1 8 0
+stpietro.bmp 3 3 1 8 1
+stpietro.bmp 3 6 2 8 0
+stpietro.bmp 3 6 2 8 1

@@ -1,3 +1,5 @@
+*.bmp
+
 .settings/
 Debug/
 .metadata/
