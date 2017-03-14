@@ -50,7 +50,7 @@ class MyCanny {
                        int threshold);
 
     static Img toGreyScale(Img);
-    static void normalizeContrast(Img data, int width, int height);
+    static void normalizeContrast(Img &data, int width, int height);
     static float hypotenuse(float x, float y);
     static float gaussian(float x, float sigma);
 

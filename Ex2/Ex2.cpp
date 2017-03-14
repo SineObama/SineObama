@@ -9,11 +9,18 @@
 #include <string>
 #include <exception>
 #include "MyCanny.h"
+#include "CImg.h"
 
 using namespace cimg_library;
 using namespace std;
 
 int main() {
+    CImg<unsigned char> img(200, 100);
+    cimg_forXY(img, x, y) {
+        img(x, y) = (x+49) / 200 + 2;
+    }
+    img.save("img2.bmp");
+
     bool src, grey, contrastnormalised;
     cout << "enter 3 boolean value for whether show the source picture, the greyscale and the contrastnormalised:\n";
     cin >> src >> grey >> contrastnormalised;

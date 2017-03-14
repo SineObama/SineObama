@@ -297,7 +297,7 @@ MyCanny::Img MyCanny::toGreyScale(Img img) {
     return grey;
 }
 
-void MyCanny::normalizeContrast(Img data, int width, int height) {
+void MyCanny::normalizeContrast(Img &data, int width, int height) {
     int histogram[256] = { 0 };
     int remap[256];
     int sum = 0;
