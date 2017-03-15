@@ -13,22 +13,27 @@ class Machine {
  public:
 
     typedef double data_t;
+    typedef unsigned int size_t;
 
-    Machine(size_t n);
+    Machine(size_t n, const char *filename = NULL);
     ~Machine();
 
-    data_t learn(data_t ** const data, const size_t m, data_t alpha = 1,
-                 const size_t times = 100, const data_t bigger = 1.005,
-                 const data_t smaller = 0.99);
-    data_t guess(data_t *value);
+    void learn(const char *trainFile, const char *thetaFilePrefix,
+                 const size_t saveTimes = 100, const size_t times = 100,
+                 data_t alpha = 0.03);
+    void guess(const char *test, const char *output);
 
  private:
 
-    typedef unsigned int size_t;
     typedef float comp_t;
+
+    static void readcsv(const char *filename, data_t **data, int row,
+                        int column);
 
     size_t n;
     data_t *theta;
+    data_t *min;
+    data_t *gap;
 
 };
 
