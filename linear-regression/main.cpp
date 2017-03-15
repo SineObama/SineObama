@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
         ss << (string("move ") + cache_filename + " " + argv[3]) << (i + 1)
            << "x" << times << "x" << scale << postfix;
         system(ss.str().c_str());
-        cout << "finish writing" << endl;
+        cout << "finish writing " << (i + 1) << endl;
     }
 
     cout << "finish" << endl;

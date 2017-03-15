@@ -53,8 +53,9 @@ Machine::data_t Machine::learn(data_t ** const data, const size_t m,
     printf("\t%.1f%%\tJ=%.12le\talpha=%lf\n", (float) completion * 100, last_J,
            alpha);
 
-    for (size_t t = 0; t < times; t++) {
-
+    data_t J = 0;
+    // expand alpha to make J increase
+    while (true) {
         for (size_t j = 0; j < n + 1; j++) {
             data_t sum = 0;
             if (j != 0)
@@ -66,7 +67,7 @@ Machine::data_t Machine::learn(data_t ** const data, const size_t m,
             temp_theta[j] -= alpha / m * sum;
         }
 
-        data_t J = 0;
+        J = 0;
         for (size_t i = 0; i < m; i++) {
             temp_item[i] = temp_theta[0];
             for (size_t j = 1; j < n + 1; j++)
@@ -75,6 +76,15 @@ Machine::data_t Machine::learn(data_t ** const data, const size_t m,
             J += temp_item[i] * temp_item[i];
         }
         J /= 2 * m;
+        if (last_J < J)
+            break;
+        alpha *= 2;
+        memcpy(temp_theta, theta, sizeof(data_t) * (n + 1));
+        print_time(sys);
+        printf("\texpand\tJ=%.12le\talpha=%lf\tJ0=%.12le\n", J, alpha, last_J);
+    }
+
+    for (size_t t = 0; t < times; t++) {
         if (last_J < J) {
             alpha /= scale;
             t--;
@@ -87,6 +97,7 @@ Machine::data_t Machine::learn(data_t ** const data, const size_t m,
         memcpy(theta, temp_theta, sizeof(data_t) * (n + 1));
         last_J = J;
 
+
         // output completeness and the J function
         comp_t new_completion = (comp_t) (t + 1) / times;
         if (new_completion - completion >= completion_gap - completion_narrow) {
@@ -95,6 +106,27 @@ Machine::data_t Machine::learn(data_t ** const data, const size_t m,
             printf("\t%.1f%%\tJ=%.12le\talpha=%lf\n", (float) completion * 100,
                    last_J, alpha);
         }
+
+        // compute next theta(s) and J
+        for (size_t j = 0; j < n + 1; j++) {
+            data_t sum = 0;
+            if (j != 0)
+                for (size_t i = 0; i < m; i++)
+                    sum += item[i] * data[i][j - 1];
+            else
+                for (size_t i = 0; i < m; i++)
+                    sum += item[i];
+            temp_theta[j] -= alpha / m * sum;
+        }
+        J = 0;
+        for (size_t i = 0; i < m; i++) {
+            temp_item[i] = temp_theta[0];
+            for (size_t j = 1; j < n + 1; j++)
+                temp_item[i] += temp_theta[j] * data[i][j - 1];
+            temp_item[i] -= data[i][n];
+            J += temp_item[i] * temp_item[i];
+        }
+        J /= 2 * m;
     }
 
     delete[] item;
