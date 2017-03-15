@@ -11,10 +11,36 @@
 #include <windows.h>
 #include <iostream>
 #include "Machine.h"
+#include <cmath>
 
-#define print_time(sys) GetLocalTime(&sys);\
-    printf("%02d/%02d %02d:%02d:%02d.%03d", sys.wMonth, sys.wDay, sys.wHour,\
-           sys.wMinute, sys.wSecond, sys.wMilliseconds);
+#define print(sys, format, args...) \
+GetLocalTime(&sys);\
+printf("%02d/%02d %02d:%02d:%02d.%03d", sys.wMonth, sys.wDay, sys.wHour,\
+       sys.wMinute, sys.wSecond, sys.wMilliseconds);\
+printf(format, args);
+
+#define compute_theta(theta, item, alpha) \
+for (size_t j = 0; j < n + 1; j++) {\
+    data_t sum = 0;\
+    if (j != 0)\
+        for (size_t i = 0; i < m; i++)\
+            sum += item[i] * data[i][j - 1];\
+    else\
+        for (size_t i = 0; i < m; i++)\
+            sum += item[i];\
+    theta[j] -= alpha / m * sum;\
+}
+
+#define compute_item_and_J(J, item, theta) \
+J = 0;\
+for (size_t i = 0; i < m; i++) {\
+    item[i] = theta[0];\
+    for (size_t j = 1; j < n + 1; j++)\
+        item[i] += theta[j] * data[i][j - 1];\
+    item[i] -= data[i][n];\
+    J += item[i] * item[i];\
+}\
+J /= 2 * m;
 
 // 输入特征数（列数）n
 Machine::Machine(size_t n)
@@ -29,85 +55,82 @@ Machine::~Machine() {
 
 // 输入“特征与reference”矩阵和行数m
 Machine::data_t Machine::learn(data_t ** const data, const size_t m,
-                               data_t alpha, const size_t times, data_t scale) {
+                               data_t alpha, const size_t times,
+                               const data_t bigger, const data_t smaller) {
 
-    static const comp_t completion_gap = 0.1;
-    static const comp_t completion_narrow = completion_gap * 0.001;
+    static const comp_t completion_gap = 0.01;
+    static const comp_t completion_precision = completion_gap * 0.001;
 
     SYSTEMTIME sys;
     comp_t completion = 0;
-    data_t * const item = new data_t[m];  // hθ(x(i)) - y(i)
-    data_t * const temp_item = new data_t[m];
-    data_t * const temp_theta = new data_t[n + 1];
 
-    data_t last_J = 0;
-    for (size_t i = 0; i < m; i++) {
-        item[i] = theta[0];
-        for (size_t j = 0; j < n; j++)
-            item[i] += theta[j + 1] * data[i][j];
-        item[i] -= data[i][n];
-        last_J += item[i] * item[i];
-    }
-    last_J /= 2 * m;
-    print_time(sys);
-    printf("\t%.1f%%\tJ=%.12le\talpha=%lf\n", (float) completion * 100, last_J,
-           alpha);
-
+    data_t * const item = new data_t[m];  // h(x(i)) - y(i)
+    data_t * const new_item = new data_t[m];
+    data_t * const new_theta = new data_t[n + 1];
+    data_t * const der = new data_t[n + 1];  // derivative
+    memset(der, 0, sizeof(data_t) * (n + 1));
+    data_t * const new_der = new data_t[n + 1];  // derivative
     data_t J = 0;
-    // expand alpha to make J increase
-    while (true) {
-        for (size_t j = 0; j < n + 1; j++) {
-            data_t sum = 0;
-            if (j != 0)
-                for (size_t i = 0; i < m; i++)
-                    sum += item[i] * data[i][j - 1];
-            else
-                for (size_t i = 0; i < m; i++)
-                    sum += item[i];
-            temp_theta[j] -= alpha / m * sum;
-        }
+    data_t product = 0;
 
-        J = 0;
-        for (size_t i = 0; i < m; i++) {
-            temp_item[i] = temp_theta[0];
-            for (size_t j = 1; j < n + 1; j++)
-                temp_item[i] += temp_theta[j] * data[i][j - 1];
-            temp_item[i] -= data[i][n];
-            J += temp_item[i] * temp_item[i];
-        }
-        J /= 2 * m;
-        if (last_J < J)
-            break;
-        alpha *= 2;
-        memcpy(temp_theta, theta, sizeof(data_t) * (n + 1));
-        print_time(sys);
-        printf("\texpand\tJ=%.12le\talpha=%lf\tJ0=%.12le\n", J, alpha, last_J);
-    }
+    compute_item_and_J(J, item, theta);
+    print(sys, "\t%.1f%%\tJ=%.12le\talpha=%lf\n", 0.0f, J, alpha);
 
+    // iteration
     for (size_t t = 0; t < times; t++) {
-        if (last_J < J) {
-            alpha /= scale;
-            t--;
-            memcpy(temp_theta, theta, sizeof(data_t) * (n + 1));
-            print_time(sys);
-            printf("\tJ=%.12le\talpha=%lf\tJ0=%.12le\n", J, alpha, last_J);
-            continue;
-        }
-        memcpy(item, temp_item, sizeof(data_t) * (m));
-        memcpy(theta, temp_theta, sizeof(data_t) * (n + 1));
-        last_J = J;
 
-
-        // output completeness and the J function
-        comp_t new_completion = (comp_t) (t + 1) / times;
-        if (new_completion - completion >= completion_gap - completion_narrow) {
-            completion = new_completion;
-            print_time(sys);
-            printf("\t%.1f%%\tJ=%.12le\talpha=%lf\n", (float) completion * 100,
-                   last_J, alpha);
-        }
-
-        // compute next theta(s) and J
+        // change alpha
+//        if (false) {
+//#define FACTOR 0.5
+//            data_t alpha1 = 0;
+//            data_t alpha2 = alpha * FACTOR;
+//            data_t alpha3 = alpha;
+//            data_t J1 = J;
+//            data_t J2 = 0;
+//            data_t J3 = 0;
+//            memcpy(new_theta, theta, sizeof(data_t) * (n + 1));
+//            compute_theta(new_theta, item, alpha2);
+//            compute_item_and_J(J2, new_item, new_theta);
+//            memcpy(new_theta, theta, sizeof(data_t) * (n + 1));
+//            compute_theta(new_theta, item, alpha3);
+//            compute_item_and_J(J3, new_item, new_theta);
+//            for (size_t count = 0; count < 3; count++) {
+//                print(sys, "\t%lf\t%lf\t%lf 0\n", alpha1, alpha2, alpha3);
+//                print(sys, "\t%lf\t%lf\t%lf\n", J1, J2, J3);
+//                data_t new_alpha =
+//                        J1 > J3 ?
+//                                ((alpha3 - alpha2) * FACTOR + alpha2) :
+//                                ((alpha2 - alpha1) * FACTOR + alpha1);
+//                data_t new_J;
+//                memcpy(new_theta, theta, sizeof(data_t) * (n + 1));
+//                compute_theta(new_theta, item, new_alpha);
+//                compute_item_and_J(new_J, new_item, new_theta);
+//                if (J1 > J3) {
+//                    if (J2 > J3 || J2 > new_J) {
+//                        J1 = J2;
+//                        alpha1 = alpha2;
+//                        J2 = new_J;
+//                        alpha2 = new_alpha;
+//                    } else {
+//                        J3 = new_J;
+//                        alpha3 = new_alpha;
+//                    }
+//                } else {
+//                    if (J1 < J2 || new_J < J2) {
+//                        J1 = J2;
+//                        alpha1 = alpha2;
+//                        J2 = new_J;
+//                        alpha2 = new_alpha;
+//                    } else {
+//                        J3 = new_J;
+//                        alpha3 = new_alpha;
+//                    }
+//                }
+//            }
+//            alpha = alpha2;
+//        }
+//        compute_theta(theta, item, alpha);
+        data_t new_product = 0;
         for (size_t j = 0; j < n + 1; j++) {
             data_t sum = 0;
             if (j != 0)
@@ -116,22 +139,36 @@ Machine::data_t Machine::learn(data_t ** const data, const size_t m,
             else
                 for (size_t i = 0; i < m; i++)
                     sum += item[i];
-            temp_theta[j] -= alpha / m * sum;
+            new_der[j] = sum / m;
+            theta[j] -= alpha * new_der[j];
+            new_product += new_der[j] * der[j];
         }
-        J = 0;
-        for (size_t i = 0; i < m; i++) {
-            temp_item[i] = temp_theta[0];
-            for (size_t j = 1; j < n + 1; j++)
-                temp_item[i] += temp_theta[j] * data[i][j - 1];
-            temp_item[i] -= data[i][n];
-            J += temp_item[i] * temp_item[i];
+        memcpy(der, new_der, sizeof(data_t) * (n + 1));
+        compute_item_and_J(J, item, theta);
+
+        // info: completeness and J
+        data_t gap = fabs(new_product) - fabs(product);
+        comp_t new_completion = (comp_t) (t + 1) / times;
+        if (new_completion - completion
+                >= completion_gap - completion_precision) {
+            completion = new_completion;
+            print(sys, "\t%.1f%%\tJ=%.12le\talpha=%lf\tproduct=%lf\tgap=%lf\n",
+                  completion * 100, J, alpha, new_product, gap);
         }
-        J /= 2 * m;
+        if (gap > 0 && product != 0) {
+            if (product < 0)
+                alpha *= smaller;
+            else
+                alpha *= bigger;
+        }
+        product = new_product;
     }
 
     delete[] item;
-    delete[] temp_item;
-    delete[] temp_theta;
+    delete[] new_item;
+    delete[] new_theta;
+    delete[] der;
+    delete[] new_der;
 
     return alpha;
 }
@@ -142,3 +179,7 @@ Machine::data_t Machine::guess(data_t *value) {
         sum += theta[i] * value[i - 1];
     return sum;
 }
+
+#undef print
+#undef compute_theta
+#undef compute_item_and_J

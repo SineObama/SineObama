@@ -61,11 +61,12 @@ int main(int argc, char **argv) {
 
     // machine learning
     Machine machine(n);
-    double alpha = 1;
+    double alpha = 0.094;
+    double smaller = 0.99;
+    double bigger = 1.005;
     const int times = 100;
-    double scale = 1.1;
     for (int i = 0; i < 100; i++) {
-        alpha = machine.learn(train, m, alpha, times, scale);
+        alpha = machine.learn(train, m, alpha, times, smaller, bigger);
         cout << "finish training" << endl;
 
         // guessing and writing
@@ -76,7 +77,7 @@ int main(int argc, char **argv) {
         fclose(pFile);
         stringstream ss;
         ss << (string("move ") + cache_filename + " " + argv[3]) << (i + 1)
-           << "x" << times << "x" << scale << postfix;
+           << "x" << times << "x" << smaller << "or" << bigger << postfix;
         system(ss.str().c_str());
         cout << "finish writing " << (i + 1) << endl;
     }
@@ -90,15 +91,3 @@ int main(int argc, char **argv) {
     delete[] test;
     delete[] train;
 }
-
-//    ifstream ifs(argv[1]);
-//    ifs.getline(buffer, buffer_size);
-//    for (int i = 0; i < m; i++) {
-//        ifs.getline(buffer, buffer_size);
-//        stringstream ss;
-//        ss << buffer;
-//        ss >> unused;
-//        for (int j = 0; j < n + 1; j++) {
-//            ss >> c >> train[i][j];
-//        }
-//    }
