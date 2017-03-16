@@ -20,7 +20,7 @@ class Machine {
 
     void learn(const char *trainFile, const char *thetaFilePrefix,
                  const size_t saveTimes = 100, const size_t times = 100,
-                 data_t alpha = 0.03);
+                 data_t alpha = 0.1);
     void guess(const char *test, const char *output);
 
  private:

@@ -12,7 +12,6 @@
 
 #define m 25000
 #define n 384
-#define cache_filename "temp.csv"
 
 typedef double data_t;
 
@@ -26,10 +25,5 @@ int main(int argc, char **argv) {
 
     // machine learning
     Machine machine(n, thetaFilename);
-    machine.learn(argv[1], "theta");
+    machine.learn(argv[1], "theta", 100, 1, 0.07);
 }
-
-//stringstream ss;
-//ss << (string("move ") + cache_filename + " " + argv[3]) << (count + 1)
-//        << "x" << times << "x" << smaller << "or" << bigger << postfix;
-//system(ss.str().c_str());
