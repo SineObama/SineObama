@@ -8,6 +8,8 @@
 #ifndef MACHINE_H_
 #define MACHINE_H_
 
+#define DATA_MAX DBL_MAX
+
 class Machine {
 
  public:

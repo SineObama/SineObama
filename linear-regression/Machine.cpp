@@ -90,10 +90,10 @@ void Machine::learn(const char *trainFile, const char *thetaFilePrefix,
     if (scaling) {
         max = new data_t[n + 1];
         for (size_t j = 0; j < n + 1; j++)
-            max[j] = -DBL_MAX;
+            max[j] = -DATA_MAX;
         min = new data_t[n + 1];
         for (size_t j = 0; j < n + 1; j++)
-            min[j] = DBL_MAX;
+            min[j] = DATA_MAX;
         gap = new data_t[n];
     }
 
@@ -121,75 +121,103 @@ void Machine::learn(const char *trainFile, const char *thetaFilePrefix,
     print(sys, "finish reading train");
     print(sys, "begin training");
 
+//#define CHANGE
+
+    data_t * const temp_item = new data_t[m];
+    data_t * const temp_theta = new data_t[n + 1];
+    data_t temp_J = 0;
+#ifdef CHANGE
+    static const data_t smaller = 0.98;
+    static const data_t bigger = 1.02;
+    data_t narrow = 0.99;
+#endif
     for (size_t count = 0; count < saveTimes; count++) {
-#define CHOOSE  // choose alpha
 
         static const comp_t completion_gap = 0.01;
         static const comp_t completion_precision = completion_gap * 0.001;
-#ifdef CHOOSE
-        static const data_t smaller = 0.9;
-        static const data_t bigger = 1.1;
-#endif
-
-        comp_t completion = 0;
 
         data_t * const item = new data_t[m];  // h(x(i)) - y(i)
         data_t J = 0;
-
-        compute_item_and_J(J, item, theta);
-
-#ifdef CHOOSE
-        print(sys, "choosing alpha\tinitial alpha=%lf", alpha);
-        data_t * const temp_item = new data_t[m];
-        data_t * const temp_theta = new data_t[n + 1];
-        data_t new_alpha = 0;
-        data_t new_J = 0;
-        data_t last_J = DBL_MAX;
-        while (true) {
-            new_alpha = alpha * smaller;
-            memcpy(temp_theta, theta, sizeof(data_t) * (n + 1));
-            compute_theta(temp_theta, item, new_alpha);
-            compute_item_and_J(new_J, temp_item, temp_theta);
-            print(sys, "\tsmaller alpha=%lf\tJ=%.12le", new_alpha, new_J);
-            if (new_J >= last_J)
-                break;
-            alpha = new_alpha;
-            last_J = new_J;
-        }
-        while (true) {
-            new_alpha = alpha * bigger;
-            memcpy(temp_theta, theta, sizeof(data_t) * (n + 1));
-            compute_theta(temp_theta, item, new_alpha);
-            compute_item_and_J(new_J, temp_item, temp_theta);
-            print(sys, "\tbigger alpha=%lf\tJ=%.12le", new_alpha, new_J);
-            if (new_J >= last_J)
-                break;
-            alpha = new_alpha;
-            last_J = new_J;
-        }
-        delete[] temp_theta;
-        delete[] temp_item;
+#ifndef CHANGE
+        bool stopped = false;
 #endif
+        compute_item_and_J(J, item, theta);
+        print(sys, "%.1f%%\tJ=%.12le\talpha=%lf", 0.0f, J, alpha);
 
         // iteration
-        print(sys, "%.1f%%\tJ=%.12le\talpha=%lf", 0.0f, J, alpha);
+        comp_t completion = 0;
         for (size_t t = 0; t < times; t++) {
-
-            compute_theta(theta, item, alpha);
-            compute_item_and_J(J, item, theta);
-
-            // info: completeness and J
+            compute_theta(temp_theta, item, alpha);
+            compute_item_and_J(temp_J, temp_item, temp_theta);
+#ifdef CHANGE
+            if (temp_J > J * narrow) {
+                print(sys, "\told alpha=%lf\tJ=%.12le", alpha, temp_J);
+                data_t min_J = temp_J;
+                data_t temp_alpha = alpha * smaller;
+                memcpy(temp_theta, theta, sizeof(data_t) * (n + 1));
+                compute_theta(temp_theta, item, temp_alpha);
+                compute_item_and_J(temp_J, temp_item, temp_theta);
+                data_t scale = smaller;
+                if (temp_J > min_J) {
+                    scale = bigger;
+                    temp_alpha = alpha * bigger;
+                    memcpy(temp_theta, theta, sizeof(data_t) * (n + 1));
+                    compute_theta(temp_theta, item, temp_alpha);
+                    compute_item_and_J(temp_J, temp_item, temp_theta);
+                    if (temp_J > min_J) {
+                        narrow = 1 - (J - min_J) / J / 2;
+                        print(sys, "\n\nkeep alpha=%lf\tnarrow=%le", alpha,
+                                narrow);
+                        t--;
+                        continue;
+                    }
+                }
+                print(sys, "\tnew alpha=%lf\tJ=%.12le", temp_alpha, temp_J);
+                while (temp_J >= J * narrow) {
+                    temp_alpha *= scale;
+                    memcpy(temp_theta, theta, sizeof(data_t) * (n + 1));
+                    compute_theta(temp_theta, item, temp_alpha);
+                    compute_item_and_J(temp_J, temp_item, temp_theta);
+                    print(sys, "\tnew alpha=%lf\tJ=%.12le", temp_alpha, temp_J);
+                    if (temp_J > min_J) {
+                        narrow = 1 - (J - min_J) / J / 2;
+                        temp_alpha /= scale;
+                        print(sys, "\n\nback alpha=%lf\tnarrow=%.12le",
+                                temp_alpha, narrow);
+                        break;
+                    }
+                    min_J = temp_J;
+                }
+                alpha = temp_alpha;
+            }
+#else
+            if (temp_J > J) {
+                print(sys, "\tJ=%.12le increased, training stopped", temp_J);
+                stopped = true;
+                break;
+            }
+#endif
+            memcpy(item, temp_item, sizeof(data_t) * (m));
+            memcpy(theta, temp_theta, sizeof(data_t) * (n + 1));
+            J = temp_J;
+            // output info
             comp_t new_completion = (comp_t) (t + 1) / times;
             if (new_completion - completion
                     >= completion_gap - completion_precision) {
                 completion = new_completion;
-                print(sys, "%.1f%%\tJ=%.12le\talpha=%lf", completion * 100, J,
-                      alpha);
+                print(sys, "%.1f%%\tJ=%.12le\talpha=%lf",
+#ifdef CHANGE
+                      "\tnarrow=%le",
+#endif
+                      completion * 100, temp_J, alpha
+#ifdef CHANGE
+                      ,
+                      narrow
+#endif
+                      );
             }
         }
-
         delete[] item;
-
         cout << "finish training" << endl;
 
         // writing
@@ -203,15 +231,24 @@ fprintf(pFile, format"\n", array[(len) - 1]);
         csvfprint(pFile, "%lf", theta, n + 1);
         csvfprint(pFile, "%lf", min, n + 1);
         csvfprint(pFile, "%lf", gap, n + 1);
-        fprintf(pFile, "J=%.12le|alpha=%lf\n", J, alpha);
 #undef csvfprint
         fclose(pFile);
+        char str[100] = { };
+        sprintf(str, "J=%.12le,alpha=%lf", J, alpha);
         stringstream ss;
-        ss << (string("move ") + cache_filename + " " + thetaFilePrefix)
-           << (count + 1) << "x" << times << postfix;
+        ss << (string("move ") + cache_filename + " \"" + thetaFilePrefix)
+           << str << "x" << (count + 1) << "x" << times << postfix << "\"";
         system(ss.str().c_str());
         cout << "finish writing " << (count + 1) << endl;
+#ifndef CHANGE
+        if (stopped)
+            break;
+#endif
     }
+#ifdef CHANGE
+    delete[] temp_theta;
+    delete[] temp_item;
+#endif
 
     cout << "finish learning" << endl;
 
