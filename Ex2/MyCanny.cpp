@@ -24,13 +24,15 @@ MyCanny::MyCanny(bool src, bool grey, bool contrastnormalised)
           contrastnormalised(contrastnormalised) {
 }
 
-void MyCanny::operator()(const char *filename) {
-    (*this)(filename, 2.5f, 7.5f, 2.0f, 16, 0);
+MyCanny::Img MyCanny::operator()(const char *filename) {
+    return (*this)(filename, 2.5f, 7.5f, 2.0f, 16, 0);
 }
 
-void MyCanny::operator()(const char *filename, float lowthreshold,
-                         float highthreshold, float gaussiankernelradius,
-                         int gaussiankernelwidth, int contrastnormalise) {
+MyCanny::Img MyCanny::operator()(const char *filename, float lowthreshold,
+                                 float highthreshold,
+                                 float gaussiankernelradius,
+                                 int gaussiankernelwidth,
+                                 int contrastnormalise) {
     Img img(filename);
     if (src)
         img.display("source");
@@ -58,7 +60,7 @@ void MyCanny::operator()(const char *filename, float lowthreshold,
         answer[i] = idata[i] > 0 ? 1 : 0;
     answer.display("final");
 
-    return;
+    return answer;
 }
 
 /* NOTE: The elements of the method below (specifically the technique for

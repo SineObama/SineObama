@@ -27,12 +27,13 @@
 
 class MyCanny {
 
+    typedef cimg_library::CImg<unsigned char> Img;
  public:
 
     MyCanny(bool src, bool grey, bool contrastnormalised);
 
-    void operator()(const char *filename);
-    void operator()(const char *filename, float lowthreshold,
+    Img operator()(const char *filename);
+    Img operator()(const char *filename, float lowthreshold,
                     float highthreshold, float gaussiankernelradius,
                     int gaussiankernelwidth, int contrastnormalised);
 
@@ -40,7 +41,6 @@ class MyCanny {
 
     bool src, grey, contrastnormalised;
 
-    typedef cimg_library::CImg<unsigned char> Img;
     typedef cimg_library::CImg<int> IntMat;
     typedef cimg_library::CImg<float> FMat;
 

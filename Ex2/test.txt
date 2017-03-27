@@ -1,4 +1,4 @@
 lena.bmp 2 4 1 8 1
 lena.bmp 1 2 1 8 1
 
-img2.bmp 3 6 1 8 1
+2.bmp 2 12 1 2 0

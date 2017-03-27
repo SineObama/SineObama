@@ -16,8 +16,9 @@ using namespace std;
 
 int main() {
     CImg<unsigned char> img(200, 100);
-    cimg_forXY(img, x, y) {
-        img(x, y) = (x+49) / 200 + 2;
+    cimg_forXY(img, x, y)
+    {
+        img(x, y) = (x + 49) / 200 + 2;
     }
     img.save("img2.bmp");
 
@@ -28,7 +29,7 @@ int main() {
     cin.sync();
     cout << "enter the filename, lowthreshold, highthreshold, gaussiankernelradius, gaussiankernelwidth(integer), contrastnormalised(boolean) each time in one line.\n";
     while (true) {
-        char in[1000] = {0};
+        char in[1000] = { 0 };
         stringstream ss;
         float lowthreshold, highthreshold, gaussiankernelradius;
         int gaussiankernelwidth, contrastnormalised;
@@ -39,9 +40,12 @@ int main() {
         ss >> in >> lowthreshold >> highthreshold >> gaussiankernelradius
                 >> gaussiankernelwidth >> contrastnormalised;
         try {
-            myCanny(in, lowthreshold, highthreshold, gaussiankernelradius,
-                    gaussiankernelwidth, contrastnormalised);
-        } catch (exception e) {
+            CImg<unsigned char> edge = myCanny(in, lowthreshold, highthreshold,
+                                               gaussiankernelradius,
+                                               gaussiankernelwidth,
+                                               contrastnormalised);
+            edge.save("edge.bmp");
+        } catch (exception &e) {
             cout << "Exception: " << e.what() << endl;
         }
     }
