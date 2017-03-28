@@ -12,8 +12,9 @@
 
 using namespace std;
 
-A4::A4(bool hough)
-        : showHough(hough) {
+A4::A4(bool showHough, bool showLocalMax)
+        : showHough(showHough),
+          showLocalMax(showLocalMax) {
 }
 
 void A4::operator()(const char *edgeName, const int precisiontheta,
@@ -21,18 +22,16 @@ void A4::operator()(const char *edgeName, const int precisiontheta,
     Img edge(edgeName);
 
     Hough hough(precisiontheta, precisionp);
-    int width = edge.width();
-    int height = edge.height();
+    const int width = edge.width();
+    const int height = edge.height();
     const int maxp = sqrt(width * width + height * height) + 0.5;
     const double yToP = (double) maxp / precisionp;
-    const double xToTheta =  PI / precisiontheta;
-    hough_t voteSum = 0;
+    const double xToTheta = 2 * PI / precisiontheta;
     cimg_forXY(edge, x, y)
     {
         hough_t weight = edge(x, y);
         if (weight == 0)
             continue;
-        voteSum += weight;
         cimg_forX(hough, xx)
         {
             double theta = (xx + 0.5) * xToTheta;
@@ -46,48 +45,54 @@ void A4::operator()(const char *edgeName, const int precisiontheta,
         hough.display("hough");
     hough.save("hough.bmp");
 
-    static const int num = 4;
+    hough_t maxVote = -1;
+    cimg_forXY(hough, x, y)
+        if (maxVote < hough(x, y))
+            maxVote = hough(x, y);
 
-    // 选候选节点
-    hough_t threshold = voteSum / num * scale;  // 开始搜索的的阈值
+    // 选节点
+    hough_t threshold = maxVote * scale;  // 开始搜索的的阈值
     Point *points = new Point[hough.width() * hough.height()];
     int count = findAllLocalMax(hough, threshold, points);
 
-    hough(0, 0) = 1000000;
-    for (int i = 0; i < count; i++)
-        hough(points[i].x, points[i].y) = 1000000;
-    hough.display("localMax");
+    if (count == 0) {
+        cout << "points no found" << endl;
+    } else {
+        for (int i = 0; i < count; i++)
+            hough(points[i].x, points[i].y) *= 3;
+        if (showLocalMax)
+            hough.display("hough - local max");
 
-    // 输出函数，绘制直线
-    Img line(width, height);
-    for (int i = 0; i < count; i++) {
-        // p = xcosθ + ysinθ
-        // p - xcosθ = ysinθ
-        const double p = (points[i].y + 0.5) * yToP;
-        const double theta = (points[i].x + 0.5) * xToTheta;
-        const double sine = sin(theta);
-        const double cosine = cos(theta);
-        cout << (i + 1) << ". " << p << " = x * " << cosine << " + y * " << sine
-             << endl;
-        if (sine != 0) {
-            const double k = -cosine / sine;
-            const double b = p / sine;
-            cimg_forX(line, x)
-            {
-                int y = k * (x + 0.5) + b + 0.5;
-                if (y >= 0 && y < height)
+        // 输出函数，绘制直线
+        Img line(width, height);
+        for (int i = 0; i < count; i++) {
+            // p = xcosθ + ysinθ
+            // p - xcosθ = ysinθ
+            const double p = (points[i].y + 0.5) * yToP;
+            const double theta = (points[i].x + 0.5) * xToTheta;
+            const double sine = sin(theta);
+            const double cosine = cos(theta);
+            cout << (i + 1) << ".\t" << p << "\t= x * " << cosine << "\t+ y * "
+                 << sine << endl;
+            if (sine != 0) {
+                // y = kx + b
+                const double k = -cosine / sine;
+                const double b = p / sine;
+                cimg_forX(line, x)
+                {
+                    int y = k * (x + 0.5) + b + 0.5;
+                    if (y >= 0 && y < height)
+                        line(x, y) = 255;
+                }
+            } else {
+                const int x = p / cosine + 0.5;
+                cimg_forY(line, y)
                     line(x, y) = 255;
             }
-        } else {
-            const int x = p / cosine + 0.5;
-            cimg_forY(line, y)
-            {
-                line(x, y) = 255;
-            }
         }
+        line.display("line");
+        line.save("line.bmp");
     }
-    line.display("line");
-    line.save("line.bmp");
 
     delete[] points;
 }
@@ -106,10 +111,12 @@ int A4::findAllLocalMax(const Hough &hough, const hough_t threshold,
         if (hough(x, y) >= threshold && !checked[x][y]) {
             points[count] = getLocalMax(hough, width, height, x, y, threshold,
                                         checked);
+            // 对横纵坐标都在固定范围内的点视为一条直线
             bool newpoint = true;
             for (int i = 0; i < count; i++) {
                 if ((abs(points[i].x - points[count].x) < xgap
-                        || abs(width + points[i].x - points[count].x) < xgap)
+                        || abs(abs(points[i].x - points[count].x) - width)
+                                < xgap)
                         && abs(points[i].y - points[count].y) < ygap) {
                     newpoint = false;
                     if (points[i].weight < points[count].weight) {

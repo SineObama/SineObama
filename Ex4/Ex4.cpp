@@ -10,6 +10,7 @@
 #include <cstring>
 #include <exception>
 #include <cmath>
+#include <vector>
 //#include "CImg.h"
 #include "A4.h"
 
@@ -31,10 +32,12 @@ using namespace std;
 //}
 
 int main() {
-    bool hough;
-    cout << "enter 1 boolean value for whether show the hough space:\n";
-    cin >> hough;
-    A4 a4(hough);
+    vector<int> v(1);
+    v[0] = 0;
+    bool showHough, showLocalMax;
+    cout << "enter 2 boolean value for whether show the hough space and local max:\n";
+    cin >> showHough >> showLocalMax;
+    A4 a4(showHough, showLocalMax);
     cin.sync();
     cout << "enter the filename, hough width, hough height and threshold scale each time in one line.\n";
     while (true) {
