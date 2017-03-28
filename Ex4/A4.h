@@ -16,8 +16,8 @@ class A4 {
     typedef cimg_library::CImg<hough_t> Hough;
  public:
     A4(bool showHough, bool showLocalMax);
-    void operator()(const char *edgeName, const int precisiontheta,
-                    const int precisionp, const double threshold);
+    void operator()(const char *edgeName, const double precision,
+                    const double threshold);
  private:
     struct Point {
         hough_t weight;

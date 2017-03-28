@@ -17,16 +17,15 @@ A4::A4(bool showHough, bool showLocalMax)
           showLocalMax(showLocalMax) {
 }
 
-void A4::operator()(const char *edgeName, const int precisiontheta,
-                    const int precisionp, const double scale) {
+void A4::operator()(const char *edgeName, const double precision, const double scale) {
     Img edge(edgeName);
 
-    Hough hough(precisiontheta, precisionp);
     const int width = edge.width();
     const int height = edge.height();
-    const int maxp = sqrt(width * width + height * height) + 0.5;
-    const double yToP = (double) maxp / precisionp;
-    const double xToTheta = 2 * PI / precisiontheta;
+    const int maxp = sqrt(width * width + height * height) + 1;
+    Hough hough(maxp * precision, maxp * precision);
+    const double yToP = (double) 1 / precision;
+    const double xToTheta = 2 * PI / precision / maxp;
     cimg_forXY(edge, x, y)
     {
         hough_t weight = edge(x, y);

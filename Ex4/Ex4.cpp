@@ -13,6 +13,7 @@
 #include <vector>
 //#include "CImg.h"
 #include "A4.h"
+#include "MyCanny.h"
 
 //using namespace cimg_library;
 using namespace std;
@@ -39,19 +40,20 @@ int main() {
     cin >> showHough >> showLocalMax;
     A4 a4(showHough, showLocalMax);
     cin.sync();
-    cout << "enter the filename, hough width, hough height and threshold scale each time in one line.\n";
+    cout << "enter the filename, threshold scale(0~1) and the precision(0~1) each time in one line.\n";
     while (true) {
         char in[1000] = { 0 };
-        int width = 500, height = 500;
-        double threshold = 0.5;
+        double threshold = 0.5, precision = 0.2;
         cin.getline(in, 1000);
         if (in[0] == '\0')
             continue;
         stringstream ss;
         ss << in;
-        ss >> in >> width >> height >> threshold;
+        ss >> in >> threshold >> precision;
         try {
-            a4(in, width, height, threshold);
+            MyCanny canny(0, 0, 0);
+            canny(in).save("temp.bmp");
+            a4("temp.bmp", precision, threshold);
         } catch (exception &e) {
             cout << "Exception: " << e.what() << endl;
         }
