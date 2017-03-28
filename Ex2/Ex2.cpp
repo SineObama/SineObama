@@ -44,6 +44,9 @@ int main() {
                                                gaussiankernelradius,
                                                gaussiankernelwidth,
                                                contrastnormalised);
+            cimg_forXY(edge, x, y)
+                if (edge(x, y))
+                    edge(x, y) = 255;
             edge.save("edge.bmp");
         } catch (exception &e) {
             cout << "Exception: " << e.what() << endl;
