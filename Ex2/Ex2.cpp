@@ -10,16 +10,17 @@
 #include <exception>
 #include "MyCanny.h"
 #include "CImg.h"
+#include "canny.h"
 
 using namespace cimg_library;
 using namespace std;
 
 int main() {
     CImg<unsigned char> img(200, 100);
-    cimg_forXY(img, x, y)
-    {
-        img(x, y) = (x + 49) / 200 + 2;
-    }
+    img.fill(0);
+    const unsigned char color[] = { 255 };
+    img.draw_arrow(-1000, 20, 10000, 40, color);
+    img.display();
     img.save("img2.bmp");
 
     bool src, grey, contrastnormalised;
@@ -40,14 +41,22 @@ int main() {
         ss >> in >> lowthreshold >> highthreshold >> gaussiankernelradius
                 >> gaussiankernelwidth >> contrastnormalised;
         try {
-            CImg<unsigned char> edge = myCanny(in, lowthreshold, highthreshold,
-                                               gaussiankernelradius,
-                                               gaussiankernelwidth,
-                                               contrastnormalised);
-            cimg_forXY(edge, x, y)
-                if (edge(x, y))
-                    edge(x, y) = 255;
-            edge.save("edge.bmp");
+#ifdef use_canny
+            CImg<unsigned char> img(in);
+            cannyparam(img, img.width(), img.height(), lowthreshold,
+                    highthreshold, gaussiankernelradius, gaussiankernelwidth,
+                    contrastnormalised);
+            img.display();
+#else
+            CImg<unsigned char> img = myCanny(in, lowthreshold, highthreshold,
+                                              gaussiankernelradius,
+                                              gaussiankernelwidth,
+                                              contrastnormalised);
+#endif
+            cimg_forXY(img, x, y)
+                if (img(x, y))
+                    img(x, y) = 255;
+            img.save("edge.bmp");
         } catch (exception &e) {
             cout << "Exception: " << e.what() << endl;
         }
