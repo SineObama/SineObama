@@ -15,6 +15,7 @@
 
 #define POSTFIX ".bmp"
 #define TEMP_EDGE "temp_edge"
+#define DEFAULT_SYMBOL "."
 
 using namespace std;
 
@@ -27,7 +28,7 @@ int main() {
     cout << "enter the filename, precision and scale each time in one line.\n";
     A4 a4(showHough, showLocalMax, showFunction);
     MyCanny canny(0, 0, 0);
-    string s;
+    string s, srcName;
     while (true) {
         cout << "->";
         cin.sync();
@@ -62,17 +63,17 @@ int main() {
              * 4  filename red green blue
              */
             if (s == "1") {  // ±ßÔµ¼ì²â
-                ss >> filename;
+                ss >> srcName;
                 Img result;
                 if (!ss.good()) {
-                    result = canny((filename + POSTFIX).c_str());
+                    result = canny((srcName + POSTFIX).c_str());
                 } else {
                     float lowthreshold = 2.5, highthreshold = 7.5,
                             gaussiankernelradius = 2;
                     int gaussiankernelwidth = 16, contrastnormalised = 0;
                     ss >> lowthreshold >> highthreshold >> gaussiankernelradius
                             >> gaussiankernelwidth >> contrastnormalised;
-                    result = canny((filename + POSTFIX).c_str(), lowthreshold,
+                    result = canny((srcName + POSTFIX).c_str(), lowthreshold,
                                    highthreshold, gaussiankernelradius,
                                    gaussiankernelwidth, contrastnormalised);
                 }
@@ -84,7 +85,7 @@ int main() {
                 result.save(TEMP_EDGE POSTFIX);
             } else if (s == "2") {  // ÇóHough Space
                 ss >> filename;
-                if (filename == ".")
+                if (filename == DEFAULT_SYMBOL)
                     filename = TEMP_EDGE;
                 Img img((filename + POSTFIX).c_str());
                 A4::Hough hough;
@@ -119,6 +120,8 @@ int main() {
                     img = a4.drawLine();
                 } else {
                     ss >> filename;
+                    if (filename == DEFAULT_SYMBOL)
+                        filename = srcName;
                     img.load((filename + POSTFIX).c_str());
                     if (!ss.good()) {
                         img = a4.drawLine(img);
