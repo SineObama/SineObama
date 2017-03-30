@@ -21,11 +21,11 @@ using namespace std;
 typedef cimg_library::CImg<unsigned char> Img;
 
 int main() {
-    bool showHough, showLocalMax;
-    cout << "enter 2 boolean value for whether show the hough space and local max:\n-->";
-    cin >> showHough >> showLocalMax;
+    bool showHough, showLocalMax, showFunction;
+    cout << "enter 3 boolean value for whether display the hough space, local max and show the linear functions:\n-->";
+    cin >> showHough >> showLocalMax >> showFunction;
     cout << "enter the filename, precision and scale each time in one line.\n";
-    A4 a4(showHough, showLocalMax);
+    A4 a4(showHough, showLocalMax, showFunction);
     MyCanny canny(0, 0, 0);
     string s;
     while (true) {
@@ -44,27 +44,27 @@ int main() {
         try {
             /**
              * 1  边缘检测
-             * 11 filename
-             * 12 filename lowthreshold highthreshold gaussiankernelradius gaussiankernelwidth contrastnormalised
+             * 1  filename
+             * 1  filename lowthreshold highthreshold gaussiankernelradius gaussiankernelwidth contrastnormalised
              *
              * 2  Hough
-             * 21 filename
-             * 22 filename precision
-             * 23 filename width height
+             * 2  filename
+             * 2  filename precision
+             * 2  filename width height
              *
              * 3  选择直线
-             * 31
-             * 32 scale
+             * 3
+             * 3  scale
              *
              * 4  绘制直线
-             * 41
-             * 42 filename
-             * 43 filename red green blue
+             * 4
+             * 4  filename
+             * 4  filename red green blue
              */
-            if (s[0] == '1') {  // 边缘检测
+            if (s == "1") {  // 边缘检测
                 ss >> filename;
                 Img result;
-                if (s[1] == '1') {
+                if (!ss.good()) {
                     result = canny((filename + POSTFIX).c_str());
                 } else {
                     float lowthreshold = 2.5, highthreshold = 7.5,
@@ -82,48 +82,55 @@ int main() {
                         result(x, y) = 255;
                 }
                 result.save(TEMP_EDGE POSTFIX);
-            } else if (s[0] == '2') {  // 求Hough Space
+            } else if (s == "2") {  // 求Hough Space
                 ss >> filename;
                 if (filename == ".")
                     filename = TEMP_EDGE;
                 Img img((filename + POSTFIX).c_str());
                 A4::Hough hough;
-                if (s[1] == '1') {
+                if (!ss.good()) {
                     hough = a4.houghSpace(img);
-                } else if (s[1] == '2') {
+                } else {
                     double precision = 0.2;
                     ss >> precision;
-                    hough = a4.houghSpace(img, precision);
-                } else {
-                    int width = 360, height = 500;
-                    ss >> width >> height;
-                    hough = a4.houghSpace(img, width, height);
+                    if (!ss.good()) {
+                        hough = a4.houghSpace(img, precision);
+                    } else {
+                        int width = precision, height = 500;
+                        ss >> height;
+                        hough = a4.houghSpace(img, width, height);
+                    }
                 }
+                a4.displayHough();
                 hough.save("temp_hough" POSTFIX);
-            } else if (s[0] == '3') {
-                if (s[1] == '1') {
+            } else if (s == "3") {  // 选出直线方程
+                if (!ss.good()) {
                     a4.findLines();
                 } else {
                     double scale;
                     ss >> scale;
                     a4.findLines(scale);
                 }
-            } else if (s[0] == '4') {
+                a4.printFunctions();
+                a4.displayLocalMax();
+            } else if (s == "4") {  // 在指定图上绘制直线
                 Img img;
-                if (s[1] == '1') {
+                if (!ss.good()) {
                     img = a4.drawLine();
                 } else {
                     ss >> filename;
                     img.load((filename + POSTFIX).c_str());
-                    if (s[1] == '2') {
+                    if (!ss.good()) {
                         img = a4.drawLine(img);
                     } else {
-                        unsigned char color[] = { 0, 0, 0 };
-                        int tem;
+                        unsigned char color[3] = { };
+                        int tem = 0;
                         ss >> tem;
                         color[0] = tem;
+                        tem = 0;
                         ss >> tem;
                         color[1] = tem;
+                        tem = 0;
                         ss >> tem;
                         color[2] = tem;
                         img = a4.drawLine(img, color);

@@ -12,9 +12,12 @@
 
 using namespace std;
 
-A4::A4(bool showHough, bool showLocalMax)
+A4::A4(bool showHough, bool showLocalMax, bool showFunction)
         : showHough(showHough),
           showLocalMax(showLocalMax),
+          showFunction(showFunction),
+          srcWidth(1),
+          srcHeight(1),
           y2p(1),
           x2theta(1) {
 }
@@ -35,14 +38,20 @@ A4::Hough A4::houghSpace(const Img &edge, int width, int height) {
     return houghSpace(edge, width, height, 1);
 }
 
+void A4::displayHough() {
+    hough.display("hough");
+}
+
 A4::Img A4::operator()(const Img &edge, double precision, double scale) {
-    Hough hough = houghSpace(edge, precision);
+    houghSpace(edge, precision);
+    if (showHough)
+        displayHough();
     findLines(scale);
-    printParam();
-    static const unsigned char color[] = { 255 };
-    Img line(edge.width(), edge.height());
-    line.fill(0);
-    return drawLine(line, color);
+    if (showFunction)
+        printFunctions();
+    if (showLocalMax)
+        displayLocalMax();
+    return drawLine();
 }
 
 A4::Img A4::operator()(const char *edgeName, double precision, double scale) {
@@ -95,15 +104,16 @@ A4::Params A4::findLines(double scale) {
         return Params();
     }
 
-    Points points;
+    points.clear();
     for (int i = 0; i < count; i++) {
         Point point;
         point.x = intpoints[i].x + 0.5;
         point.y = intpoints[i].y + 0.5;
         points.push_back(point);
     }
+    delete[] intpoints;
 
-    params = Params();
+    params.clear();
     for (Points::const_iterator it = points.begin(); it != points.end(); it++) {
         // p = xcos¦È + ysin¦È
         Param param;
@@ -113,24 +123,28 @@ A4::Params A4::findLines(double scale) {
         param.cos = cos(theta);
         params.push_back(param);
     }
-    printParam();
-
-    if (showLocalMax) {
-        Hough tem(hough);
-        for (int i = 0; i < count; i++)
-            tem(intpoints[i].x, intpoints[i].y) *= 3;
-        tem.display("hough - local max");
-    }
-    delete[] intpoints;
 
     return params;
 }
 
-void A4::printParam() {
+void A4::printFunctions() {
     int i = 1;
     for (Params::iterator it = params.begin(); it != params.end(); it++, i++)
         cout << i << ".\t" << it->p << "\t= x * " << it->cos << "\t+ y * "
              << it->sin << endl;
+}
+
+void A4::displayLocalMax(double radiusScale) {
+    Hough tem(hough);
+    const int radius =
+            tem.height() > tem.width() ?
+                    tem.height() * radiusScale : tem.width() * radiusScale;
+    for (unsigned int i = 0; i < points.size(); i++) {
+        hough_t color[] = { tem(points[i].x, points[i].y) };
+        tem.draw_circle(points[i].x, points[i].y, radius, color);
+        tem(points[i].x, points[i].y) *= 2;
+    }
+    tem.display("local max");
 }
 
 A4::Img A4::drawLine() {
@@ -179,8 +193,6 @@ A4::Hough A4::houghSpace(const Img &edge, const int width, const int height,
                 hough(xx, yy) += weight;
         }
     }
-    if (showHough)
-        hough.display("hough");
     return hough;
 }
 
