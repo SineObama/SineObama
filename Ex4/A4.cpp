@@ -39,10 +39,11 @@ A4::Hough A4::houghSpace(const Img &edge, int width, int height) {
 }
 
 void A4::displayHough() {
-    hough.display("hough");
+    hough.display("hough", false);
 }
 
-A4::Img A4::operator()(const Img &edge, double precision, double scale) {
+A4::Img A4::operator()(const Img &edge, double precision, double scale,
+                       const Img &src) {
     houghSpace(edge, precision);
     if (showHough)
         displayHough();
@@ -51,11 +52,7 @@ A4::Img A4::operator()(const Img &edge, double precision, double scale) {
         printFunctions();
     if (showLocalMax)
         displayLocalMax();
-    return drawLine();
-}
-
-A4::Img A4::operator()(const char *edgeName, double precision, double scale) {
-    return operator ()(Img(edgeName), precision, scale);
+    return drawLine(src);
 }
 
 A4::Params A4::findLines(double scale) {
@@ -144,7 +141,7 @@ void A4::displayLocalMax(double radiusScale) {
         tem.draw_circle(points[i].x, points[i].y, radius, color);
         tem(points[i].x, points[i].y) *= 2;
     }
-    tem.display("local max");
+    tem.display("local max", false);
 }
 
 A4::Img A4::drawLine() {

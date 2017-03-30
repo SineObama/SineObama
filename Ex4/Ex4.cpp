@@ -13,8 +13,8 @@
 #include "A4.h"
 #include "MyCanny.h"
 
+#define PREFIX "cached_"
 #define POSTFIX ".bmp"
-#define TEMP_EDGE "temp_edge"
 #define DEFAULT_SYMBOL "."
 
 using namespace std;
@@ -29,6 +29,9 @@ int main() {
     A4 a4(showHough, showLocalMax, showFunction);
     MyCanny canny(0, 0, 0);
     string s, srcName;
+    Img cached_edge;
+    A4::Hough cached_hough;
+    Img cached_result;
     while (true) {
         cout << "->";
         cin.sync();
@@ -61,49 +64,50 @@ int main() {
              * 4
              * 4  filename
              * 4  filename red green blue
+             *
+             * 11,22,44分别保存最近的一次结果
              */
             if (s == "1") {  // 边缘检测
                 ss >> srcName;
-                Img result;
                 if (!ss.good()) {
-                    result = canny((srcName + POSTFIX).c_str());
+                    cached_edge = canny((srcName + POSTFIX).c_str());
                 } else {
                     float lowthreshold = 2.5, highthreshold = 7.5,
                             gaussiankernelradius = 2;
                     int gaussiankernelwidth = 16, contrastnormalised = 0;
                     ss >> lowthreshold >> highthreshold >> gaussiankernelradius
                             >> gaussiankernelwidth >> contrastnormalised;
-                    result = canny((srcName + POSTFIX).c_str(), lowthreshold,
-                                   highthreshold, gaussiankernelradius,
-                                   gaussiankernelwidth, contrastnormalised);
+                    cached_edge = canny((srcName + POSTFIX).c_str(),
+                                        lowthreshold, highthreshold,
+                                        gaussiankernelradius,
+                                        gaussiankernelwidth,
+                                        contrastnormalised);
                 }
-                cimg_forXY(result, x, y)
+                cimg_forXY(cached_edge, x, y)
                 {
-                    if (result(x, y))
-                        result(x, y) = 255;
+                    if (cached_edge(x, y))
+                        cached_edge(x, y) = 255;
                 }
-                result.save(TEMP_EDGE POSTFIX);
+                cached_edge.display("edge", false);
             } else if (s == "2") {  // 求Hough Space
                 ss >> filename;
-                if (filename == DEFAULT_SYMBOL)
-                    filename = TEMP_EDGE;
-                Img img((filename + POSTFIX).c_str());
-                A4::Hough hough;
+                Img edge;
                 if (!ss.good()) {
-                    hough = a4.houghSpace(img);
+                    edge = cached_edge;
+                    cached_hough = a4.houghSpace(edge);
                 } else {
+                    edge.load((filename + POSTFIX).c_str());
                     double precision = 0.2;
                     ss >> precision;
                     if (!ss.good()) {
-                        hough = a4.houghSpace(img, precision);
+                        cached_hough = a4.houghSpace(edge, precision);
                     } else {
                         int width = precision, height = 500;
                         ss >> height;
-                        hough = a4.houghSpace(img, width, height);
+                        cached_hough = a4.houghSpace(edge, width, height);
                     }
                 }
                 a4.displayHough();
-                hough.save("temp_hough" POSTFIX);
             } else if (s == "3") {  // 选出直线方程
                 if (!ss.good()) {
                     a4.findLines();
@@ -115,16 +119,15 @@ int main() {
                 a4.printFunctions();
                 a4.displayLocalMax();
             } else if (s == "4") {  // 在指定图上绘制直线
-                Img img;
                 if (!ss.good()) {
-                    img = a4.drawLine();
+                    cached_result = a4.drawLine();
                 } else {
                     ss >> filename;
                     if (filename == DEFAULT_SYMBOL)
                         filename = srcName;
-                    img.load((filename + POSTFIX).c_str());
+                    cached_result.load((filename + POSTFIX).c_str());
                     if (!ss.good()) {
-                        img = a4.drawLine(img);
+                        cached_result = a4.drawLine(cached_result);
                     } else {
                         unsigned char color[3] = { };
                         int tem = 0;
@@ -136,14 +139,26 @@ int main() {
                         tem = 0;
                         ss >> tem;
                         color[2] = tem;
-                        img = a4.drawLine(img, color);
+                        cached_result = a4.drawLine(cached_result, color);
                     }
                 }
-                img.display("result");
-                img.save("temp_result" POSTFIX);
+                cached_result.display("result", false);
+            } else if (s == "11") {
+                cached_edge.save(PREFIX"edge"POSTFIX);
+            } else if (s == "22") {
+                cached_hough.get_normalize(0, 255).save(PREFIX"hough"POSTFIX);
+            } else if (s == "44") {
+                cached_result.save(PREFIX"result"POSTFIX);
             } else {
-                cout << "normal:" << endl;
-                a4(canny(s.c_str()), precision, threshold);
+                ss >> precision >> threshold;
+                cached_edge = canny(s.c_str());
+                cached_edge.display("edge", false);
+                cout << "edge detect complete...\n";
+                Img result = a4(cached_edge, precision, threshold,
+                                Img(s.c_str()));
+                cout << "algorithm complete...\n";
+                result.save("result"POSTFIX);
+                cout << "result saved.\n";
             }
         } catch (exception &e) {
             cout << "Exception: " << e.what() << endl;

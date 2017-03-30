@@ -28,9 +28,8 @@ class A4 {
 
     A4(bool showHough, bool showLocalMax, bool showFunction);
 
-    Img operator()(const Img &edge, double precision, double scale);
-    Img operator()(const char *edgeName, double precision, double scale);
-
+    Img operator()(const Img &edge, double precision, double scale,
+                   const Img &src);
     Hough houghSpace(const Img &edge, double precision = 0.2);
     Hough houghSpace(const Img &edge, int width, int height);
     void displayHough();
