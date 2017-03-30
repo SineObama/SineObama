@@ -5,6 +5,7 @@
 
 .settings/
 Debug/
+Release/
 .metadata/
 .project
 .cproject
