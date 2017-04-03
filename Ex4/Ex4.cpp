@@ -22,11 +22,11 @@ using namespace std;
 typedef cimg_library::CImg<unsigned char> Img;
 
 int main() {
-    bool showHough, showLocalMax, showFunction;
-    cout << "enter 3 boolean value for whether display the hough space, local max and show the linear functions:\n-->";
-    cin >> showHough >> showLocalMax >> showFunction;
+    bool showHough, showLocalMax, showEquation;
+    cout << "enter 3 boolean value for whether display the hough space, local max and show the linear equations:\n-->";
+    cin >> showHough >> showLocalMax >> showEquation;
     cout << "enter the filename, precision and scale each time in one line.\n";
-    A4 a4(showHough, showLocalMax, showFunction);
+    A4 a4(showHough, showLocalMax, showEquation);
     MyCanny canny(0, 0, 0);
     string s, srcName;
     Img cached_edge;
@@ -116,7 +116,7 @@ int main() {
                     ss >> scale;
                     a4.findLines(scale);
                 }
-                a4.printFunctions();
+                a4.printLinesEquations();
                 a4.displayLocalMax();
             } else if (s == "4") {  // 在指定图上绘制直线
                 if (!ss.good()) {

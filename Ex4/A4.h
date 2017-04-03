@@ -26,7 +26,7 @@ class A4 {
     };
     typedef std::vector<Param> Params;
 
-    A4(bool showHough, bool showLocalMax, bool showFunction);
+    A4(bool showHough, bool showLocalMax, bool showEquation);
 
     Img operator()(const Img &edge, double precision, double scale,
                    const Img &src);
@@ -34,7 +34,7 @@ class A4 {
     Hough houghSpace(const Img &edge, int width, int height);
     void displayHough();
     Params findLines(double scale = 0.6);
-    void printFunctions();
+    void printLinesEquations();
     void displayLocalMax(double radiusScale = 0.003);
     Img drawLine();
     Img drawLine(Img, const unsigned char *color = NULL);
@@ -44,7 +44,7 @@ class A4 {
     struct IntPoint {
         int x, y;
     };
-    bool showHough, showLocalMax, showFunction;
+    bool showHough, showLocalMax, showEquation;
 
     int srcWidth, srcHeight;
     double y2p, x2theta;

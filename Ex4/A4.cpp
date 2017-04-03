@@ -12,10 +12,10 @@
 
 using namespace std;
 
-A4::A4(bool showHough, bool showLocalMax, bool showFunction)
+A4::A4(bool showHough, bool showLocalMax, bool showEquation)
         : showHough(showHough),
           showLocalMax(showLocalMax),
-          showFunction(showFunction),
+          showEquation(showEquation),
           srcWidth(1),
           srcHeight(1),
           y2p(1),
@@ -48,8 +48,8 @@ A4::Img A4::operator()(const Img &edge, double precision, double scale,
     if (showHough)
         displayHough();
     findLines(scale);
-    if (showFunction)
-        printFunctions();
+    if (showEquation)
+        printLinesEquations();
     if (showLocalMax)
         displayLocalMax();
     return drawLine(src);
@@ -124,7 +124,7 @@ A4::Params A4::findLines(double scale) {
     return params;
 }
 
-void A4::printFunctions() {
+void A4::printLinesEquations() {
     int i = 1;
     for (Params::iterator it = params.begin(); it != params.end(); it++, i++)
         cout << i << ".\t" << it->p << "\t= x * " << it->cos << "\t+ y * "
