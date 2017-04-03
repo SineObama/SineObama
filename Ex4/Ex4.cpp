@@ -52,6 +52,7 @@ int main() {
              * 1  filename lowthreshold highthreshold gaussiankernelradius gaussiankernelwidth contrastnormalised
              *
              * 2  Hough
+             * 2
              * 2  filename
              * 2  filename precision
              * 2  filename width height
@@ -70,10 +71,11 @@ int main() {
             if (s == "1") {  // 边缘检测
                 ss >> srcName;
                 if (!ss.good()) {
-                    cached_edge = canny((srcName + POSTFIX).c_str());
+                    cached_edge = canny((srcName + POSTFIX).c_str(), 2.5f, 7.5f,
+                                        7.0f, 16, 0);
                 } else {
                     float lowthreshold = 2.5, highthreshold = 7.5,
-                            gaussiankernelradius = 2;
+                            gaussiankernelradius = 7;
                     int gaussiankernelwidth = 16, contrastnormalised = 0;
                     ss >> lowthreshold >> highthreshold >> gaussiankernelradius
                             >> gaussiankernelwidth >> contrastnormalised;
@@ -116,6 +118,7 @@ int main() {
                     ss >> scale;
                     a4.findLines(scale);
                 }
+                a4.calcPoints();
                 a4.printLinesEquations();
                 a4.displayLocalMax();
             } else if (s == "4") {  // 在指定图上绘制直线
@@ -129,16 +132,10 @@ int main() {
                     if (!ss.good()) {
                         cached_result = a4.drawLinesAndPoints(cached_result);
                     } else {
-                        unsigned char color[3] = { };
-                        int tem = 0;
-                        ss >> tem;
-                        color[0] = tem;
-                        tem = 0;
-                        ss >> tem;
-                        color[1] = tem;
-                        tem = 0;
-                        ss >> tem;
-                        color[2] = tem;
+                        unsigned char color[3] = { 0 };
+                        ss >> color[0];
+                        ss >> color[1];
+                        ss >> color[2];
                         cached_result = a4.drawLinesAndPoints(cached_result,
                                                               color);
                     }
