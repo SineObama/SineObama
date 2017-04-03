@@ -35,9 +35,9 @@ class A4 {
     void displayHough();
     Params findLines(double scale = 0.6);
     void printLinesEquations();
-    void displayLocalMax(double radiusScale = 0.003);
-    Img drawLine();
-    Img drawLine(Img, const unsigned char *color = NULL);
+    void displayLocalMax(double radiusScale = 0.005);
+    Img drawLinesAndPoints();
+    Img drawLinesAndPoints(Img, const unsigned char *inputColor = NULL);
 
  private:
 

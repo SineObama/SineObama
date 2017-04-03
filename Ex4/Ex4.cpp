@@ -22,9 +22,9 @@ using namespace std;
 typedef cimg_library::CImg<unsigned char> Img;
 
 int main() {
-    bool showHough, showLocalMax, showEquation;
-    cout << "enter 3 boolean value for whether display the hough space, local max and show the linear equations:\n-->";
-    cin >> showHough >> showLocalMax >> showEquation;
+    bool showEdge, showHough, showLocalMax, showEquation;
+    cout << "enter 4 boolean value for whether display the edge, the hough space, local max and show the linear equations:\n-->";
+    cin >> showEdge >> showHough >> showLocalMax >> showEquation;
     cout << "enter the filename, precision and scale each time in one line.\n";
     A4 a4(showHough, showLocalMax, showEquation);
     MyCanny canny(0, 0, 0);
@@ -120,14 +120,14 @@ int main() {
                 a4.displayLocalMax();
             } else if (s == "4") {  // 在指定图上绘制直线
                 if (!ss.good()) {
-                    cached_result = a4.drawLine();
+                    cached_result = a4.drawLinesAndPoints();
                 } else {
                     ss >> filename;
                     if (filename == DEFAULT_SYMBOL)
                         filename = srcName;
                     cached_result.load((filename + POSTFIX).c_str());
                     if (!ss.good()) {
-                        cached_result = a4.drawLine(cached_result);
+                        cached_result = a4.drawLinesAndPoints(cached_result);
                     } else {
                         unsigned char color[3] = { };
                         int tem = 0;
@@ -139,7 +139,8 @@ int main() {
                         tem = 0;
                         ss >> tem;
                         color[2] = tem;
-                        cached_result = a4.drawLine(cached_result, color);
+                        cached_result = a4.drawLinesAndPoints(cached_result,
+                                                              color);
                     }
                 }
                 cached_result.display("result", false);
@@ -151,8 +152,9 @@ int main() {
                 cached_result.save(PREFIX"result"POSTFIX);
             } else {
                 ss >> precision >> threshold;
-                cached_edge = canny(s.c_str());
-                cached_edge.display("edge", false);
+                cached_edge = canny(s.c_str(), 2.5, 7.5, 4, 16, 0);
+                if (showEdge)
+                    cached_edge.display("edge", false);
                 cout << "edge detect complete...\n";
                 Img result = a4(cached_edge, precision, threshold,
                                 Img(s.c_str()));

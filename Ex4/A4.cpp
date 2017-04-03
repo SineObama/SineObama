@@ -52,7 +52,7 @@ A4::Img A4::operator()(const Img &edge, double precision, double scale,
         printLinesEquations();
     if (showLocalMax)
         displayLocalMax();
-    return drawLine(src);
+    return drawLinesAndPoints(src);
 }
 
 A4::Params A4::findLines(double scale) {
@@ -96,11 +96,6 @@ A4::Params A4::findLines(double scale) {
         delete[] checked[i];
     delete[] checked;
 
-    if (count == 0) {
-        cout << "points no found" << endl;
-        return Params();
-    }
-
     points.clear();
     for (int i = 0; i < count; i++) {
         Point point;
@@ -126,9 +121,13 @@ A4::Params A4::findLines(double scale) {
 
 void A4::printLinesEquations() {
     int i = 1;
-    for (Params::iterator it = params.begin(); it != params.end(); it++, i++)
-        cout << i << ".\t" << it->p << "\t= x * " << it->cos << "\t+ y * "
-             << it->sin << endl;
+    if (params.size())
+        for (Params::iterator it = params.begin(); it != params.end();
+                it++, i++)
+            cout << i << ".\t" << it->p << "\t= x * " << it->cos << "\t+ y * "
+                 << it->sin << endl;
+    else
+        cout << "no line" << endl;
 }
 
 void A4::displayLocalMax(double radiusScale) {
@@ -139,32 +138,54 @@ void A4::displayLocalMax(double radiusScale) {
     for (unsigned int i = 0; i < points.size(); i++) {
         hough_t color[] = { tem(points[i].x, points[i].y) };
         tem.draw_circle(points[i].x, points[i].y, radius, color);
-        tem(points[i].x, points[i].y) *= 2;
     }
     tem.display("local max", false);
 }
 
-A4::Img A4::drawLine() {
-    return drawLine(Img(srcWidth, srcHeight));
+A4::Img A4::drawLinesAndPoints() {
+    return drawLinesAndPoints(Img(srcWidth, srcHeight));
 }
 
-A4::Img A4::drawLine(Img img, const unsigned char *color) {
+A4::Img A4::drawLinesAndPoints(Img img, const unsigned char *inputColor) {
     static const unsigned char defaultColor[] = { 255, 255, 255 };
-    const unsigned char *usedColor = color == NULL ? defaultColor : color;
+    static const double radiusScale = 0.005;
+    const int radius =
+            img.height() > img.width() ?
+                    img.height() * radiusScale : img.width() * radiusScale;  // 交点圆的半径
+    const unsigned char *color = inputColor == NULL ? defaultColor : inputColor;
     // y = kx + b
     // c = ax + by
+    // 画线
     for (Params::const_iterator it = params.begin(); it != params.end(); it++) {
         if (it->sin != 0) {
             const double k = -it->cos / it->sin;
             const double b = it->p / it->sin;
-            int x1 = 0;
-            int y1 = k * (x1 + 0.5) + b + 0.5;
-            int x2 = img.width() - 1;
-            int y2 = k * (x2 + 0.5) + b + 0.5;
-            img.draw_line(x1, y1, x2, y2, usedColor);
+            // 求出直线与图像左右边界直线的交点
+            const int x1 = 0;
+            const int y1 = k * (x1 + 0.5) + b + 0.5;
+            const int x2 = img.width() - 1;
+            const int y2 = k * (x2 + 0.5) + b + 0.5;
+            img.draw_line(x1, y1, x2, y2, color);
         } else {
-            int x = it->p / it->cos + 0.5;
-            img.draw_line(x, 0, x, img.height(), usedColor);
+            const int x = it->p / it->cos + 0.5;
+            img.draw_line(x, 0, x, img.height(), color);
+        }
+    }
+    // 画点
+    for (Params::const_iterator it = params.begin(); it != params.end() - 1;
+            it++) {
+        for (Params::const_iterator it2 = it + 1; it2 != params.end(); it2++) {
+            const double d = it->cos * it2->sin - it2->cos * it->sin;
+            if (d == 0)
+                continue;
+            const double doublex = (it->p * it2->sin - it2->p * it->sin) / d;
+            const double doubley =
+                    it->sin != 0 ?
+                            (it->p - doublex * it->cos) / it->sin :
+                            (it2->p - doublex * it2->cos) / it2->sin;
+            const int x = doublex + 0.5, y = doubley + 0.5;
+            if (x >= 0 && x < img.width() && y >= 0 && y < img.height())
+                img.draw_circle(x, y, radius, color);
         }
     }
     return img;
