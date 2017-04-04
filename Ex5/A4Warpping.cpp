@@ -60,3 +60,34 @@ void A4Warpping::adjust(int *x, int *y) {
 #undef swap
 #undef dis
 }
+
+A4Warpping::Mat A4Warpping::calcMat(int *x, int *y, int *dx, int *dy) {
+
+}
+
+void A4Warpping::solve(double **m, int size, double *s) {
+    for (int i = 0; i < size; i++) {
+        if (m[i][i] == 0) {
+            int j;
+            for (j = i + 1; j < size; j++) {
+                if (m[j][i] != 0)
+                    break;
+            }
+            if (j == size)
+                return;  // todo no solution
+            for (int k = 0; k < size; k++) {  // ½»»»ijÐÐ
+                double temp = m[i][k];
+                m[i][k] = m[j][k];
+                m[j][k] = temp;
+            }
+        }
+        for (int k = size; k >= i; k--)
+            m[i][k] /= m[i][i];
+        for (int j = i + 1; j < size; j++) {
+            if (m[j][i] == 0)
+                continue;
+            for (int k = size; k >= i; k--)
+                m[j][k] -= m[j][i] * m[i][k];
+        }
+    }
+}

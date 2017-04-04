@@ -32,6 +32,8 @@ class A4Warpping {
     static void adjust(int *x, int *y);
     // 由3点映射到3点的变换计算出变换矩阵
     static Mat calcMat(int *x, int *y, int *dx, int *dy);
+    // 对size行size+1列的矩阵求解，最后一列是。。。
+    static void solve(double **, int size, double *solution);
 
  private:
 
