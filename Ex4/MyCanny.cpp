@@ -58,7 +58,6 @@ MyCanny::Img MyCanny::operator()(const char *filename, float lowthreshold,
     Img answer(w, h);
     for (int i = 0; i < w * h; i++)
         answer[i] = idata[i] > 0 ? 1 : 0;
-    answer.display("final");
 
     return answer;
 }
