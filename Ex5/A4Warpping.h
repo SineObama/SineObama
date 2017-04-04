@@ -22,6 +22,19 @@ class A4Warpping {
     Img operator()(const Img &src, int *x, int *y);
     Img operator()(const Img &src, int *x, int *y, int width, int height);
 
+ private:
+
+    // 变换矩阵
+    struct Mat {
+        double p[2][3];
+        double *operator[](int i) {
+            return p[i];
+        }
+    };
+
+    // 由3点映射到3点的变换计算出变换矩阵
+    Mat calcMat(int *x, int *y, int *dx, int *dy);
+
 };
 
 #endif /* A4WARPPING_H_ */
