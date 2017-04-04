@@ -12,6 +12,7 @@
 #include <vector>
 #include "A4.h"
 #include "MyCanny.h"
+#include "A4Warpping.h"
 
 #define PREFIX "cached_"
 #define POSTFIX ".bmp"
@@ -21,11 +22,46 @@ using namespace std;
 
 typedef cimg_library::CImg<unsigned char> Img;
 
+void testWarpping(A4Warpping &a4Warpping, int *x, int *y, int *seq, int index) {
+    if (index == 4) {
+        int xx[4], yy[4];
+        for (int i = 0; i < 4; i++) {
+            xx[i] = x[seq[i]];
+            yy[i] = y[seq[i]];
+        }
+        for (int i = 0; i < 4; i++)
+            cout << xx[i] << " ";
+        for (int i = 0; i < 4; i++)
+            cout << yy[i] << " ";
+        cout << "   ";
+        a4Warpping(Img(), xx, yy, 0, 0);
+        for (int i = 0; i < 4; i++)
+            cout << xx[i] << " ";
+        for (int i = 0; i < 4; i++)
+            cout << yy[i] << " ";
+        cout << endl;
+        return;
+    }
+    testWarpping(a4Warpping, x, y, seq, index + 1);
+    for (int i = 1; i < 4 - index; i++) {
+        int temp = seq[index];
+        seq[index] = seq[index + i];
+        seq[index + i] = temp;
+        testWarpping(a4Warpping, x, y, seq, index + 1);
+        temp = seq[index];
+        seq[index] = seq[index + i];
+        seq[index + i] = temp;
+    }
+}
+
 int main() {
+    setbuf(stdout,NULL);
+
     bool showEdge, showHough, showLocalMax, showEquation;
     cout << "enter 4 boolean value for whether display the edge, the hough space, local max and show the linear equations:\n-->";
     cin >> showEdge >> showHough >> showLocalMax >> showEquation;
     cout << "enter the filename, precision and scale each time in one line.\n";
+    A4Warpping a4Warpping;
     A4 a4(showHough, showLocalMax, showEquation);
     MyCanny canny(0, 0, 0);
     string s, srcName;
@@ -147,6 +183,11 @@ int main() {
                 cached_hough.get_normalize(0, 255).save(PREFIX"hough"POSTFIX);
             } else if (s == "44") {
                 cached_result.save(PREFIX"result"POSTFIX);
+            } else if (s == "555") {  // 测试调整顺序功能
+                int x[] = { 0, 2, 2, 0 };
+                int y[] = { 3, 3, 0, 0 };
+                int seq[] = { 0, 1, 2, 3 };
+                testWarpping(a4Warpping, x, y, seq, 0);
             } else {
                 ss >> precision >> threshold;
                 cached_edge = canny(s.c_str(), 2.5, 7.5, 4, 16, 0);
