@@ -22,7 +22,7 @@ using namespace std;
 
 typedef cimg_library::CImg<unsigned char> Img;
 
-void testWarpping(A4Warpping &a4Warpping, int *x, int *y, int *seq, int index) {
+void testWarpping(const int *x, const int *y, int *seq, int index) {
     if (index == 4) {
         int xx[4], yy[4];
         for (int i = 0; i < 4; i++) {
@@ -34,7 +34,7 @@ void testWarpping(A4Warpping &a4Warpping, int *x, int *y, int *seq, int index) {
         for (int i = 0; i < 4; i++)
             cout << yy[i] << " ";
         cout << "   ";
-        a4Warpping(Img(), xx, yy, 0, 0);
+        A4Warpping::adjust(xx, yy);
         for (int i = 0; i < 4; i++)
             cout << xx[i] << " ";
         for (int i = 0; i < 4; i++)
@@ -42,12 +42,12 @@ void testWarpping(A4Warpping &a4Warpping, int *x, int *y, int *seq, int index) {
         cout << endl;
         return;
     }
-    testWarpping(a4Warpping, x, y, seq, index + 1);
+    testWarpping(x, y, seq, index + 1);
     for (int i = 1; i < 4 - index; i++) {
         int temp = seq[index];
         seq[index] = seq[index + i];
         seq[index + i] = temp;
-        testWarpping(a4Warpping, x, y, seq, index + 1);
+        testWarpping(x, y, seq, index + 1);
         temp = seq[index];
         seq[index] = seq[index + i];
         seq[index + i] = temp;
@@ -55,7 +55,7 @@ void testWarpping(A4Warpping &a4Warpping, int *x, int *y, int *seq, int index) {
 }
 
 int main() {
-    setbuf(stdout,NULL);
+    setbuf(stdout, NULL);
 
     bool showEdge, showHough, showLocalMax, showEquation;
     cout << "enter 4 boolean value for whether display the edge, the hough space, local max and show the linear equations:\n-->";
@@ -187,7 +187,7 @@ int main() {
                 int x[] = { 0, 2, 2, 0 };
                 int y[] = { 3, 3, 0, 0 };
                 int seq[] = { 0, 1, 2, 3 };
-                testWarpping(a4Warpping, x, y, seq, 0);
+                testWarpping(x, y, seq, 0);
             } else {
                 ss >> precision >> threshold;
                 cached_edge = canny(s.c_str(), 2.5, 7.5, 4, 16, 0);
