@@ -66,7 +66,7 @@ A4::Params A4::findLines(double scale) {
     // 对横纵坐标都在固定范围内的点视为一条直线
     const int xgap = width * 0.05;
     const int ygap = height * 0.05;
-    HoughIntPoint *houghpoints = new HoughIntPoint[width * height / 4];
+    HoughPointInfo *houghpoints = new HoughPointInfo[width * height / 4];
     bool ** const checked = new bool*[width];  // 标记检测过的点
     for (int i = 0; i < width; i++)
         checked[i] = new bool[height];
@@ -83,8 +83,7 @@ A4::Params A4::findLines(double scale) {
                         && abs(houghpoints[i].y - houghpoints[count].y)
                                 < ygap) {
                     newpoint = false;
-                    if (hough(houghpoints[i].x, houghpoints[i].y)
-                            < hough(houghpoints[count].x, houghpoints[count].y))
+                    if (houghpoints[i].v < houghpoints[count].v)
                         houghpoints[i] = houghpoints[count];
                     break;
                 }
@@ -100,7 +99,7 @@ A4::Params A4::findLines(double scale) {
     for (int i = 0; i < count - 1; i++) {
         for (int j = i + 1; j < count; j++) {
             if (houghpoints[i].v < houghpoints[j].v) {
-                HoughIntPoint temp = houghpoints[i];
+                HoughPointInfo temp = houghpoints[i];
                 houghpoints[i] = houghpoints[j];
                 houghpoints[j] = temp;
             }
@@ -108,34 +107,34 @@ A4::Params A4::findLines(double scale) {
     }
     count = 4;
 
-    houghPoints.clear();
+    houghFPoints.clear();
     for (int i = 0; i < count; i++) {
-        HoughPoint point;
+        fPoint point;
         point.x = houghpoints[i].x + 0.5;
         point.y = houghpoints[i].y + 0.5;
-        houghPoints.push_back(point);
+        houghFPoints.push_back(point);
     }
     delete[] houghpoints;
 
-    params.clear();
-    for (HoughPoints::const_iterator it = houghPoints.begin();
-            it != houghPoints.end(); it++) {
+    equtions.clear();
+    for (fPoints::const_iterator it = houghFPoints.begin();
+            it != houghFPoints.end(); it++) {
         // p = xcosθ + ysinθ
-        Param param;
-        param.p = it->y * y2p;
+        Param eqution;
+        eqution.p = it->y * y2p;
         const double theta = it->x * x2theta;
-        param.sin = sin(theta);
-        param.cos = cos(theta);
-        params.push_back(param);
+        eqution.sin = sin(theta);
+        eqution.cos = cos(theta);
+        equtions.push_back(eqution);
     }
 
-    return params;
+    return equtions;
 }
 
 void A4::printLinesEquations() {
     int i = 1;
-    if (params.size())
-        for (Params::iterator it = params.begin(); it != params.end();
+    if (equtions.size())
+        for (Params::iterator it = equtions.begin(); it != equtions.end();
                 it++, i++)
             cout << i << ".\t" << it->p << "\t= x * " << it->cos << "\t+ y * "
                  << it->sin << endl;
@@ -148,18 +147,19 @@ void A4::displayLocalMax(double radiusScale) {
     const int radius =
             tem.height() > tem.width() ?
                     tem.height() * radiusScale : tem.width() * radiusScale;
-    for (unsigned int i = 0; i < houghPoints.size(); i++) {
-        hough_t color[] = { tem(houghPoints[i].x, houghPoints[i].y) };
-        tem.draw_circle(houghPoints[i].x, houghPoints[i].y, radius, color);
+    for (unsigned int i = 0; i < houghFPoints.size(); i++) {
+        hough_t color[] = { tem(houghFPoints[i].x, houghFPoints[i].y) };
+        tem.draw_circle(houghFPoints[i].x, houghFPoints[i].y, radius, color);
     }
     tem.display("local max", false);
 }
 
 A4::Points A4::calcPoints() {
-    points.clear();
-    for (Params::const_iterator it = params.begin(); it != params.end() - 1;
+    intersections.clear();
+    for (Params::const_iterator it = equtions.begin(); it != equtions.end() - 1;
             it++) {
-        for (Params::const_iterator it2 = it + 1; it2 != params.end(); it2++) {
+        for (Params::const_iterator it2 = it + 1; it2 != equtions.end();
+                it2++) {
             const double d = it->cos * it2->sin - it2->cos * it->sin;
             if (d == 0)
                 continue;
@@ -173,11 +173,11 @@ A4::Points A4::calcPoints() {
                 Point point;
                 point.x = x;
                 point.y = y;
-                points.push_back(point);
+                intersections.push_back(point);
             }
         }
     }
-    return points;
+    return intersections;
 }
 
 A4::Img A4::drawLinesAndPoints() {
@@ -194,7 +194,8 @@ A4::Img A4::drawLinesAndPoints(Img img, const unsigned char *inputColor) {
     // y = kx + b
     // c = ax + by
     // 画线
-    for (Params::const_iterator it = params.begin(); it != params.end(); it++) {
+    for (Params::const_iterator it = equtions.begin(); it != equtions.end();
+            it++) {
         if (it->sin != 0) {
             const double k = -it->cos / it->sin;
             const double b = it->p / it->sin;
@@ -210,7 +211,8 @@ A4::Img A4::drawLinesAndPoints(Img img, const unsigned char *inputColor) {
         }
     }
     // 画点
-    for (Points::const_iterator it = points.begin(); it != points.end(); it++)
+    for (Points::const_iterator it = intersections.begin();
+            it != intersections.end(); it++)
         img.draw_circle(it->x, it->y, radius, color);
     return img;
 }
@@ -238,14 +240,14 @@ A4::Hough A4::houghSpace(const Img &edge, const int width, const int height,
     return hough;
 }
 
-A4::HoughIntPoint A4::getLocalMax(const Hough &hough, const int width,
-                                  const int height, const int x, const int y,
-                                  const hough_t threshold,
-                                  bool ** const checked) {
+A4::HoughPointInfo A4::getLocalMax(const Hough &hough, const int width,
+                                   const int height, const int x, const int y,
+                                   const hough_t threshold,
+                                   bool ** const checked) {
     static const int direction = 8;
     static const int tx[direction] = { 0, 1, 1, 1, 0, -1, -1, -1 };
     static const int ty[direction] = { -1, -1, 0, 1, 1, 1, 0, -1 };
-    HoughIntPoint max;
+    HoughPointInfo max;
     max.x = x;
     max.y = y;
     max.v = hough(x, y);
@@ -256,8 +258,8 @@ A4::HoughIntPoint A4::getLocalMax(const Hough &hough, const int width,
         if (nx < 0 || nx >= width || ny < 0 || ny >= height
                 || hough(nx, ny) < threshold || checked[nx][ny])
             continue;
-        HoughIntPoint p = getLocalMax(hough, width, height, nx, ny, threshold,
-                                      checked);
+        HoughPointInfo p = getLocalMax(hough, width, height, nx, ny, threshold,
+                                       checked);
         if (max.v < p.v)
             max = p;
     }

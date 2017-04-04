@@ -22,7 +22,7 @@ class A4 {
     };
     typedef std::vector<Param> Params;
     struct Point {
-        int x,y;
+        int x, y;
     };
     typedef std::vector<Point> Points;
 
@@ -44,11 +44,11 @@ class A4 {
 
  private:
 
-    struct HoughPoint {
+    struct fPoint {
         double x, y;
     };
-    typedef std::vector<HoughPoint> HoughPoints;
-    struct HoughIntPoint {
+    typedef std::vector<fPoint> fPoints;
+    struct HoughPointInfo {
         int x, y;
         hough_t v;
     };
@@ -59,15 +59,16 @@ class A4 {
     double y2p, x2theta;
     Hough hough;
 
-    HoughPoints houghPoints;
-    Params params;
-    Points points;
+    fPoints houghFPoints;
+    Params equtions;
+    Points intersections;  // ½»µã
 
     Hough houghSpace(const Img &edge, const int width, const int height,
                      bool unused);
-    static HoughIntPoint getLocalMax(const Hough &hough, const int width,
-                                const int height, const int x, const int y,
-                                const hough_t threshold, bool ** const checked);
+    static HoughPointInfo getLocalMax(const Hough &hough, const int width,
+                                     const int height, const int x, const int y,
+                                     const hough_t threshold,
+                                     bool ** const checked);
 };
 
 #endif /* A4_H_ */
