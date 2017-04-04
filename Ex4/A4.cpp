@@ -47,15 +47,15 @@ A4::Img A4::operator()(const Img &edge, double precision, double scale,
     houghSpace(edge, precision);
     if (showHough)
         displayHough();
-    findLines(scale);
+    find4Lines(scale);
     if (showEquation)
-        printLinesEquations();
+        printEquations();
     if (showLocalMax)
         displayLocalMax();
     return drawLinesAndPoints(src);
 }
 
-A4::Params A4::findLines(double scale) {
+A4::Equtions A4::find4Lines(double scale) {
     hough_t maxVote = -1;
     cimg_forXY(hough, x, y)
         if (maxVote < hough(x, y))
@@ -120,7 +120,7 @@ A4::Params A4::findLines(double scale) {
     for (fPoints::const_iterator it = houghFPoints.begin();
             it != houghFPoints.end(); it++) {
         // p = xcos¦È + ysin¦È
-        Param eqution;
+        Eqution eqution;
         eqution.p = it->y * y2p;
         const double theta = it->x * x2theta;
         eqution.sin = sin(theta);
@@ -131,10 +131,10 @@ A4::Params A4::findLines(double scale) {
     return equtions;
 }
 
-void A4::printLinesEquations() {
+void A4::printEquations() {
     int i = 1;
     if (equtions.size())
-        for (Params::iterator it = equtions.begin(); it != equtions.end();
+        for (Equtions::iterator it = equtions.begin(); it != equtions.end();
                 it++, i++)
             cout << i << ".\t" << it->p << "\t= x * " << it->cos << "\t+ y * "
                  << it->sin << endl;
@@ -156,9 +156,9 @@ void A4::displayLocalMax(double radiusScale) {
 
 A4::Points A4::calcPoints() {
     intersections.clear();
-    for (Params::const_iterator it = equtions.begin(); it != equtions.end() - 1;
+    for (Equtions::const_iterator it = equtions.begin(); it != equtions.end() - 1;
             it++) {
-        for (Params::const_iterator it2 = it + 1; it2 != equtions.end();
+        for (Equtions::const_iterator it2 = it + 1; it2 != equtions.end();
                 it2++) {
             const double d = it->cos * it2->sin - it2->cos * it->sin;
             if (d == 0)
@@ -194,7 +194,7 @@ A4::Img A4::drawLinesAndPoints(Img img, const unsigned char *inputColor) {
     // y = kx + b
     // c = ax + by
     // »­Ïß
-    for (Params::const_iterator it = equtions.begin(); it != equtions.end();
+    for (Equtions::const_iterator it = equtions.begin(); it != equtions.end();
             it++) {
         if (it->sin != 0) {
             const double k = -it->cos / it->sin;

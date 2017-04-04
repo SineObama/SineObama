@@ -112,14 +112,14 @@ int main() {
                 a4.displayHough();
             } else if (s == "3") {  // 选出直线方程
                 if (!ss.good()) {
-                    a4.findLines();
+                    a4.find4Lines();
                 } else {
                     double scale;
                     ss >> scale;
-                    a4.findLines(scale);
+                    a4.find4Lines(scale);
                 }
                 a4.calcPoints();
-                a4.printLinesEquations();
+                a4.printEquations();
                 a4.displayLocalMax();
             } else if (s == "4") {  // 在指定图上绘制直线
                 if (!ss.good()) {

@@ -17,10 +17,10 @@ class A4 {
     typedef cimg_library::CImg<unsigned char> Img;
     typedef double hough_t;
     typedef cimg_library::CImg<hough_t> Hough;
-    struct Param {
+    struct Eqution {
         double cos, sin, p;
     };
-    typedef std::vector<Param> Params;
+    typedef std::vector<Eqution> Equtions;
     struct Point {
         int x, y;
     };
@@ -30,15 +30,19 @@ class A4 {
 
     Img operator()(const Img &edge, double precision, double scale,
                    const Img &src);
+
+    // 1. 根据边缘图计算Hough space
     Hough houghSpace(const Img &edge, double precision = 0.2);
     Hough houghSpace(const Img &edge, int width, int height);
     void displayHough();
 
-    Params findLines(double scale = 0.4);
-    void printLinesEquations();
+    // 2. 从Hough space中找出A4纸4条边和其交点
+    Equtions find4Lines(double scale = 0.4);
+    void printEquations();
     void displayLocalMax(double radiusScale = 0.005);
     Points calcPoints();
 
+    // 3. 在图上标出线和交点
     Img drawLinesAndPoints();
     Img drawLinesAndPoints(Img, const unsigned char *inputColor = NULL);
 
@@ -60,7 +64,7 @@ class A4 {
     Hough hough;
 
     fPoints houghFPoints;
-    Params equtions;
+    Equtions equtions;
     Points intersections;  // 交点
 
     Hough houghSpace(const Img &edge, const int width, const int height,
