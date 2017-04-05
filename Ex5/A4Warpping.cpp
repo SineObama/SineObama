@@ -95,13 +95,12 @@ void A4Warpping::warpping(const Img &src, Img &img, int *sx, int *sy, int *dx,
         double fx = x + 0.5;
         double fy = y + 0.5;
         bool in = true;
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 3; i++)
             if ((lines[i].a * fx + lines[i].b * fy + lines[i].c >= 0)
                     ^ lines[i].pos) {
                 in = false;
                 break;
             }
-        }
         if (!in)
             continue;
         double tx = mat[0][0] * fx + mat[0][1] * fy + mat[0][2];
@@ -120,30 +119,28 @@ void A4Warpping::warpping(const Img &src, Img &img, int *sx, int *sy, int *dx,
     }
 }
 
-A4Warpping::Mat A4Warpping::calcMat(int *x, int *y, int *dx, int *dy) {
+A4Warpping::Mat A4Warpping::calcMat(int *sx, int *sy, int *dx, int *dy) {
     Mat mat;
     double mm[3][4] = { };
     double *m[] = { mm[0], mm[1], mm[2] };
     for (int i = 0; i < 3; i++) {
-        m[i][0] = x[i];
-        m[i][1] = y[i];
+        m[i][0] = sx[i];
+        m[i][1] = sy[i];
         m[i][2] = 1;
         m[i][3] = dx[i];
     }
     solve(m, 3);
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; i++)
         mat[0][i] = m[i][3];
-    }
     for (int i = 0; i < 3; i++) {
-        m[i][0] = x[i];
-        m[i][1] = y[i];
+        m[i][0] = sx[i];
+        m[i][1] = sy[i];
         m[i][2] = 1;
         m[i][3] = dy[i];
     }
     solve(m, 3);
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; i++)
         mat[1][i] = m[i][3];
-    }
     return mat;
 }
 
