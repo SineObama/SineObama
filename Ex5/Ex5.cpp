@@ -68,6 +68,8 @@ int main() {
     Img cached_edge;
     A4::Hough cached_hough;
     Img cached_result;
+    A4::Points cached_points;
+    Img cached_A4;
     while (true) {
         cout << "->";
         cin.sync();
@@ -88,21 +90,27 @@ int main() {
              * 1  filename lowthreshold highthreshold gaussiankernelradius gaussiankernelwidth contrastnormalised
              *
              * 2  Hough
-             * 2
+             * 2                        # 使用刚才上一步的结果
+             * 2  .                     # 使用硬盘缓存
              * 2  filename
              * 2  filename precision
              * 2  filename width height
              *
-             * 3  选择直线
-             * 3
+             * 3  选择直线                                        # 依赖上一步
+             * 3                        # 使用默认参数
              * 3  scale
              *
-             * 4  绘制直线
-             * 4
+             * 4  绘制直线                                        # 依赖上一步
+             * 4                        # 在空白图片上作图
+             * 4  .                     # 使用第一步的图片
              * 4  filename
              * 4  filename red green blue
              *
-             * 11,22,44分别保存最近的一次结果
+             * 5  Warpping              # 依赖上一步
+             * 5  .                     # 使用第一步的图片
+             * 5  filename
+             *
+             * 11,22,44,55分别保存最近的一次结果
              */
             if (s == "1") {  // 边缘检测
                 ss >> srcName;
@@ -128,12 +136,14 @@ int main() {
                 }
                 cached_edge.display("edge", false);
             } else if (s == "2") {  // 求Hough Space
-                ss >> filename;
                 Img edge;
                 if (!ss.good()) {
                     edge = cached_edge;
                     cached_hough = a4.houghSpace(edge);
                 } else {
+                    ss >> filename;
+                    if (filename == DEFAULT_SYMBOL)
+                        filename = PREFIX"edge";
                     edge.load((filename + POSTFIX).c_str());
                     double precision = 0.2;
                     ss >> precision;
@@ -154,7 +164,7 @@ int main() {
                     ss >> scale;
                     a4.find4Lines(scale);
                 }
-                a4.calcPoints();
+                cached_points = a4.calcPoints();
                 a4.printEquations();
                 a4.displayLocalMax();
             } else if (s == "4") {  // 在指定图上绘制直线
@@ -177,12 +187,30 @@ int main() {
                     }
                 }
                 cached_result.display("result", false);
+            } else if (s == "5") {  // 进行A4纸Warpping
+                if (!ss.good()) {
+                    cout << "please input filename" << endl;
+                } else {
+                    ss >> filename;
+                    if (filename == DEFAULT_SYMBOL)
+                        filename = srcName;
+                    Img src((filename + POSTFIX).c_str());
+                    int x[4], y[4];
+                    for (int i = 0; i < 4; i++) {
+                        x[i] = cached_points[i].x;
+                        y[i] = cached_points[i].y;
+                    }
+                    cached_A4 = a4Warpping(src, x, y, false);
+                    cached_A4.display("A4", false);
+                }
             } else if (s == "11") {
                 cached_edge.save(PREFIX"edge"POSTFIX);
             } else if (s == "22") {
                 cached_hough.get_normalize(0, 255).save(PREFIX"hough"POSTFIX);
             } else if (s == "44") {
                 cached_result.save(PREFIX"result"POSTFIX);
+            } else if (s == "55") {
+                cached_A4.save(PREFIX"A4"POSTFIX);
             } else if (s == "555") {  // 测试调整顺序功能
                 int x[] = { 0, 2, 2, 0 };
                 int y[] = { 3, 3, 0, 0 };
