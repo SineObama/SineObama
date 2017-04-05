@@ -77,11 +77,15 @@ A4::Equtions A4::find4Lines(double scale) {
                                              threshold, checked);
             bool newpoint = true;
             for (int i = 0; i < count; i++) {
-                if ((abs(houghpoints[i].x - houghpoints[count].x) < xgap
+                if (((abs(houghpoints[i].x - houghpoints[count].x) < xgap
                         || abs(abs(houghpoints[i].x - houghpoints[count].x)
                                 - width) < xgap)
-                        && abs(houghpoints[i].y - houghpoints[count].y)
-                                < ygap) {
+                        && abs(houghpoints[i].y - houghpoints[count].y) < ygap)
+                        || ((abs(
+                                abs(houghpoints[i].x - houghpoints[count].x)
+                                        - width / 2) < xgap)
+                                && abs(houghpoints[i].y + houghpoints[count].y)
+                                        < ygap)) {
                     newpoint = false;
                     if (houghpoints[i].v < houghpoints[count].v)
                         houghpoints[i] = houghpoints[count];
@@ -156,8 +160,8 @@ void A4::displayLocalMax(double radiusScale) {
 
 A4::Points A4::calcPoints() {
     intersections.clear();
-    for (Equtions::const_iterator it = equtions.begin(); it != equtions.end() - 1;
-            it++) {
+    for (Equtions::const_iterator it = equtions.begin();
+            it != equtions.end() - 1; it++) {
         for (Equtions::const_iterator it2 = it + 1; it2 != equtions.end();
                 it2++) {
             const double d = it->cos * it2->sin - it2->cos * it->sin;
