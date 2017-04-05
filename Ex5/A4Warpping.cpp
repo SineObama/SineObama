@@ -18,13 +18,13 @@ A4Warpping::Img A4Warpping::operator()(const Img &src, int *x, int *y,
 #define dis(a, b) sqrt((x[a] - x[b])*(x[a] - x[b]) + (y[a] - y[b])*(y[a] - y[b]))
     int width = dis(0, 1) + 0.5;
     int height = dis(0, 3) + 0.5;
-    return a4Warpping(src, x, y, width, height, resample);
+    return a4Affine(src, x, y, width, height, resample);
 }
 
 A4Warpping::Img A4Warpping::operator()(const Img &src, int *x, int *y,
                                        int width, int height, bool resample) {
     adjust(x, y);
-    return a4Warpping(src, x, y, width, height, resample);
+    return a4Affine(src, x, y, width, height, resample);
 }
 
 // 调整4个点的顺序，从左上角开始，顺时针，对应下图。。。
@@ -66,7 +66,7 @@ void A4Warpping::adjust(int *x, int *y) {
 #undef dis
 }
 
-void A4Warpping::warpping(const Img &src, Img &img, int *sx, int *sy, int *dx,
+void A4Warpping::affine(const Img &src, Img &img, int *sx, int *sy, int *dx,
                           int *dy, bool resample) {
     struct Line {
         // ax + by + c =0
@@ -92,7 +92,7 @@ void A4Warpping::warpping(const Img &src, Img &img, int *sx, int *sy, int *dx,
 //        std::cout << lines[i].a << " " << lines[i].b << " " << lines[i].c
 //                  << "\n";
     }
-    Mat mat = calcMat(dx, dy, sx, sy);  // 采用逆向映射
+    Mat mat = affineMat(dx, dy, sx, sy);  // 采用逆向映射
 //    std::cout << mat[0][0] << " " << mat[0][1] << " " << mat[0][2] << "\n" << mat[1][0] << " " << mat[1][1] << " " << mat[1][2] << "\n";
     cimg_forXY(img, x, y)  // 可优化为只遍历局部长方形区域，但当前题目A4纸占整个图
     {
@@ -126,7 +126,7 @@ void A4Warpping::warpping(const Img &src, Img &img, int *sx, int *sy, int *dx,
     }
 }
 
-A4Warpping::Mat A4Warpping::calcMat(int *sx, int *sy, int *dx, int *dy) {
+A4Warpping::Mat A4Warpping::affineMat(int *sx, int *sy, int *dx, int *dy) {
     Mat mat;
     double mm[3][4] = { };
     double *m[] = { mm[0], mm[1], mm[2] };
@@ -148,6 +148,9 @@ A4Warpping::Mat A4Warpping::calcMat(int *sx, int *sy, int *dx, int *dy) {
     solve(m, 3);
     for (int i = 0; i < 3; i++)
         mat[1][i] = m[i][3];
+    mat[2][0] = 0;
+    mat[2][1] = 0;
+    mat[2][2] = 1;
     return mat;
 }
 
@@ -158,8 +161,10 @@ void A4Warpping::solve(double **m, int size) {
             for (i2 = i + 1; i2 < size; i2++)
                 if (m[i2][i] != 0)
                     break;
-            if (i2 == size)
-                throw;  // todo no solution
+            if (i2 == size) {
+                std::cout << "no solution\n";
+                return;  // todo no solution
+            }
             for (int j = 0; j < size + 1; j++) {  // 交换两行
                 double temp = m[i][j];
                 m[i][j] = m[i2][j];
@@ -181,7 +186,7 @@ void A4Warpping::solve(double **m, int size) {
 }
 
 // 把4个点分成2个三角形区域独立进行Warpping
-A4Warpping::Img A4Warpping::a4Warpping(const Img &src, int *x, int *y,
+A4Warpping::Img A4Warpping::a4Affine(const Img &src, int *x, int *y,
                                        int width, int height, bool resample) {
     Img img(width, height, 1, src.spectrum());
     {
@@ -189,14 +194,14 @@ A4Warpping::Img A4Warpping::a4Warpping(const Img &src, int *x, int *y,
         int sy[3] = { y[0], y[1], y[3] };
         int dx[3] = { 0, width - 1, 0 };
         int dy[3] = { height - 1, height - 1, 0 };
-        warpping(src, img, sx, sy, dx, dy, resample);
+        affine(src, img, sx, sy, dx, dy, resample);
     }
     {
         int sx[3] = { x[1], x[2], x[3] };
         int sy[3] = { y[1], y[2], y[3] };
         int dx[3] = { width - 1, width - 1, 0 };
         int dy[3] = { height - 1, 0, 0 };
-        warpping(src, img, sx, sy, dx, dy, resample);
+        affine(src, img, sx, sy, dx, dy, resample);
     }
     return img;
 }
