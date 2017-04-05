@@ -189,9 +189,10 @@ int main() {
                 int seq[] = { 0, 1, 2, 3 };
                 testWarpping(x, y, seq, 0);
             } else if (s == "5552") {  // 单例测试矩阵求解功能
-                double mm[][4] = { { 0, 1, 1, 0 },
-                                  { 1, 0, 1, 1 },
-                                  { 0.5, 0, 1, 0 } };
+                double mm[][4] = { { 0, 1, 1, 0 }, { 1, 0, 1, 1 }, { 0.5,
+                                                                     0,
+                                                                     1,
+                                                                     0 } };
                 double *m[] = { mm[0], mm[1], mm[2] };
                 A4Warpping::solve(m, 3);
                 for (int i = 0; i < 3; i++) {
@@ -199,6 +200,30 @@ int main() {
                         cout << m[i][j] << " ";
                     cout << endl;
                 }
+            } else if (s == "5553") {  // 测试三点形变
+                Img src(200, 200);
+                src.fill(0);
+                cimg_forXY(src, x, y)
+                {
+                    src(x, y) = y;
+                }
+                Img dst(200, 200);
+                dst.fill(0);
+                int x[3] = { 0, 200, 0 };
+                int y[3] = { 200, 200, 0 };
+                int dx[3] = { 0, 200, 0 };
+                int dy[3] = { 100, 100, 0 };
+                for (int i = 0; i < 3; i++)
+                    cin >> x[i];
+                for (int i = 0; i < 3; i++)
+                    cin >> y[i];
+                for (int i = 0; i < 3; i++)
+                    cin >> dx[i];
+                for (int i = 0; i < 3; i++)
+                    cin >> dy[i];
+                A4Warpping::warpping(src, dst, x, y, dx, dy);
+                src.display();
+                dst.display();
             } else {
                 ss >> precision >> threshold;
                 cached_edge = canny(s.c_str(), 2.5, 7.5, 4, 16, 0);

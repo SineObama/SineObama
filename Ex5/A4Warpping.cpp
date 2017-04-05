@@ -65,9 +65,59 @@ void A4Warpping::adjust(int *x, int *y) {
 #undef dis
 }
 
-void A4Warpping::warpping(Img &img, int *sx, int *sy, int *dx, int *dy,
-                          bool resample) {
+void A4Warpping::warpping(const Img &src, Img &img, int *sx, int *sy, int *dx,
+                          int *dy, bool resample) {
+    struct Line {
+        // ax + by + c =0
+        double a, b, c;
+        bool pos;  // 第三个点带入直线方程，结果是否大于0。用于判断点是否在此直线的一侧
+    } lines[3];
+    for (int i = 0; i < 3; i++) {
+        double x1 = dx[i] + 0.5, x2 = dx[(i + 1) % 3] + 0.5, x3 =
+                dx[(i + 2) % 3] + 0.5;
+        double y1 = dy[i] + 0.5, y2 = dy[(i + 1) % 3] + 0.5, y3 =
+                dy[(i + 2) % 3] + 0.5;
+        double de = x1 * y2 - x2 * y1;
+        if (de == 0) {
+            lines[i].a = y1;
+            lines[i].b = -x1;
+            lines[i].c = 0;
+        } else {
+            lines[i].a = (y1 - y2) / de;
+            lines[i].b = (x2 - x1) / de;
+            lines[i].c = 1;
+        }
+        lines[i].pos = lines[i].a * x3 + lines[i].b * y3 + lines[i].c > 0;
+    }
+    Mat mat = calcMat(dx, dy, sx, sy);  // 采用逆向映射
+    cimg_forXY(img, x, y)  // 可优化为只遍历局部长方形区域，但当前题目A4纸占整个图
+    {
+        double fx = x + 0.5;
+        double fy = y + 0.5;
+        bool in = true;
+        for (int i = 0; i < 3; i++) {
+            if ((lines[i].a * fx + lines[i].b * fy + lines[i].c >= 0)
+                    ^ lines[i].pos) {
+                in = false;
+                break;
+            }
+        }
+        if (!in)
+            continue;
+        double tx = mat[0][0] * fx + mat[0][1] * fy + mat[0][2];
+        double ty = mat[1][0] * fx + mat[1][1] * fy + mat[1][2];
+        if (resample) {
 
+        } else {
+            if (img.spectrum() == 1) {
+                img(x, y) = src(tx + 0.5, ty + 0.5);
+            } else {
+                img(x, y, 0) = src(tx + 0.5, ty + 0.5, 0);
+                img(x, y, 1) = src(tx + 0.5, ty + 0.5, 1);
+                img(x, y, 2) = src(tx + 0.5, ty + 0.5, 2);
+            }
+        }
+    }
 }
 
 A4Warpping::Mat A4Warpping::calcMat(int *x, int *y, int *dx, int *dy) {
@@ -135,14 +185,14 @@ A4Warpping::Img A4Warpping::a4Warpping(const Img &src, int *x, int *y,
         int sy[3] = { y[0], y[1], y[3] };
         int dx[3] = { 0, width - 1, 0 };
         int dy[3] = { height - 1, height - 1, 0 };
-        warpping(img, sx, sy, dx, dy, resample);
+        warpping(src, img, sx, sy, dx, dy, resample);
     }
     {
         int sx[3] = { x[1], x[2], x[3] };
         int sy[3] = { y[1], y[2], y[3] };
         int dx[3] = { width - 1, width - 1, 0 };
         int dy[3] = { height - 1, 0, 0 };
-        warpping(img, sx, sy, dx, dy, resample);
+        warpping(src, img, sx, sy, dx, dy, resample);
     }
     return img;
 }
