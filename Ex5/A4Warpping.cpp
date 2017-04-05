@@ -11,18 +11,19 @@
 A4Warpping::A4Warpping() {
 }
 
-A4Warpping::Img A4Warpping::operator()(const Img &src, int *x, int *y) {
+A4Warpping::Img A4Warpping::operator()(const Img &src, int *x, int *y,
+                                       bool resample) {
     adjust(x, y);
 #define dis(a, b) sqrt((x[a] - x[b])*(x[a] - x[b]) + (y[a] - y[b])*(y[a] - y[b]))
     int width = dis(0, 1) + 0.5;
     int height = dis(0, 3) + 0.5;
-    return a4Warpping(src, x, y, width, height);
+    return a4Warpping(src, x, y, width, height, resample);
 }
 
 A4Warpping::Img A4Warpping::operator()(const Img &src, int *x, int *y,
-                                       int width, int height) {
+                                       int width, int height, bool resample) {
     adjust(x, y);
-    return a4Warpping(src, x, y, width, height);
+    return a4Warpping(src, x, y, width, height, resample);
 }
 
 // 调整4个点的顺序，从左上角开始，顺时针，对应下图。。。
@@ -62,6 +63,11 @@ void A4Warpping::adjust(int *x, int *y) {
 #undef checkSmaller
 #undef swap
 #undef dis
+}
+
+void A4Warpping::warpping(Img &img, int *sx, int *sy, int *dx, int *dy,
+                          bool resample) {
+
 }
 
 A4Warpping::Mat A4Warpping::calcMat(int *x, int *y, int *dx, int *dy) {
@@ -122,21 +128,21 @@ void A4Warpping::solve(double **m, int size) {
 
 // 把4个点分成2个三角形区域独立进行Warpping
 A4Warpping::Img A4Warpping::a4Warpping(const Img &src, int *x, int *y,
-                                       int width, int height) {
+                                       int width, int height, bool resample) {
     Img img(width, height, 1, src.spectrum());
     {
         int sx[3] = { x[0], x[1], x[3] };
         int sy[3] = { y[0], y[1], y[3] };
         int dx[3] = { 0, width - 1, 0 };
         int dy[3] = { height - 1, height - 1, 0 };
-        warpping(img, sx, sy, dx, dy);
+        warpping(img, sx, sy, dx, dy, resample);
     }
     {
         int sx[3] = { x[1], x[2], x[3] };
         int sy[3] = { y[1], y[2], y[3] };
         int dx[3] = { width - 1, width - 1, 0 };
         int dy[3] = { height - 1, 0, 0 };
-        warpping(img, sx, sy, dx, dy);
+        warpping(img, sx, sy, dx, dy, resample);
     }
     return img;
 }
