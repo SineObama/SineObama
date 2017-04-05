@@ -12,7 +12,11 @@ A4Warpping::A4Warpping() {
 }
 
 A4Warpping::Img A4Warpping::operator()(const Img &src, int *x, int *y) {
-    return src;
+    adjust(x, y);
+#define dis(a, b) sqrt((x[a] - x[b])*(x[a] - x[b]) + (y[a] - y[b])*(y[a] - y[b]))
+    int width = dis(0, 1) + 0.5;
+    int height = dis(0, 3) + 0.5;
+    return a4Warpping(src, x, y, width, height);
 }
 
 A4Warpping::Img A4Warpping::operator()(const Img &src, int *x, int *y,
@@ -33,7 +37,6 @@ A4Warpping::Img A4Warpping::operator()(const Img &src, int *x, int *y,
  *   width
  */
 void A4Warpping::adjust(int *x, int *y) {
-#define dis(a, b) sqrt((x[a] - x[b])*(x[a] - x[b]) + (y[a] - y[b])*(y[a] - y[b]))
 #define swap(a, b) { temp = x[a]; x[a] = x[b]; x[b] = temp;\
                      temp = y[a]; y[a] = y[b]; y[b] = temp; }
 #define checkSmaller(a, b) if (d##a > d##b) { swap(a, b) \
