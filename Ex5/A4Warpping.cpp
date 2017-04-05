@@ -6,6 +6,7 @@
  */
 
 #include <cmath>
+#include<iostream>
 #include "A4Warpping.h"
 
 A4Warpping::A4Warpping() {
@@ -88,6 +89,8 @@ void A4Warpping::warpping(const Img &src, Img &img, int *sx, int *sy, int *dx,
             lines[i].c = 1;
         }
         lines[i].pos = lines[i].a * x3 + lines[i].b * y3 + lines[i].c > 0;
+//        std::cout << lines[i].a << " " << lines[i].b << " " << lines[i].c
+//                  << "\n";
     }
     Mat mat = calcMat(dx, dy, sx, sy);  // 采用逆向映射
     cimg_forXY(img, x, y)  // 可优化为只遍历局部长方形区域，但当前题目A4纸占整个图
@@ -95,25 +98,32 @@ void A4Warpping::warpping(const Img &src, Img &img, int *sx, int *sy, int *dx,
         double fx = x + 0.5;
         double fy = y + 0.5;
         bool in = true;
-        for (int i = 0; i < 3; i++)
-            if ((lines[i].a * fx + lines[i].b * fy + lines[i].c >= 0)
-                    ^ lines[i].pos) {
+        for (int i = 0; i < 3; i++) {
+            double value = lines[i].a * fx + lines[i].b * fy + lines[i].c;
+            if (((value > 0) ^ lines[i].pos) && value != 0) {
                 in = false;
                 break;
             }
+        }
         if (!in)
             continue;
         double tx = mat[0][0] * fx + mat[0][1] * fy + mat[0][2];
         double ty = mat[1][0] * fx + mat[1][1] * fy + mat[1][2];
+        int intx = tx + 0.5;
+        if (intx + 0.5 == tx)
+            intx--;
+        int inty = ty + 0.5;
+        if (inty + 0.5 == ty)
+            inty--;
         if (resample) {
 
         } else {
             if (img.spectrum() == 1) {
-                img(x, y) = src(tx + 0.5, ty + 0.5);
+                img(x, y) = src(intx, inty);
             } else {
-                img(x, y, 0) = src(tx + 0.5, ty + 0.5, 0);
-                img(x, y, 1) = src(tx + 0.5, ty + 0.5, 1);
-                img(x, y, 2) = src(tx + 0.5, ty + 0.5, 2);
+                img(x, y, 0) = src(intx, inty, 0);
+                img(x, y, 1) = src(intx, inty, 1);
+                img(x, y, 2) = src(intx, inty, 2);
             }
         }
     }
