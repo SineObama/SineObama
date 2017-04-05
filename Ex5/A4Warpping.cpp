@@ -124,19 +124,19 @@ A4Warpping::Mat A4Warpping::calcMat(int *sx, int *sy, int *dx, int *dy) {
     double mm[3][4] = { };
     double *m[] = { mm[0], mm[1], mm[2] };
     for (int i = 0; i < 3; i++) {
-        m[i][0] = sx[i];
-        m[i][1] = sy[i];
+        m[i][0] = sx[i] + 0.5;
+        m[i][1] = sy[i] + 0.5;
         m[i][2] = 1;
-        m[i][3] = dx[i];
+        m[i][3] = dx[i] + 0.5;
     }
     solve(m, 3);
     for (int i = 0; i < 3; i++)
         mat[0][i] = m[i][3];
     for (int i = 0; i < 3; i++) {
-        m[i][0] = sx[i];
-        m[i][1] = sy[i];
+        m[i][0] = sx[i] + 0.5;
+        m[i][1] = sy[i] + 0.5;
         m[i][2] = 1;
-        m[i][3] = dy[i];
+        m[i][3] = dy[i] + 0.5;
     }
     solve(m, 3);
     for (int i = 0; i < 3; i++)
