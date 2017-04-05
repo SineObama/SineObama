@@ -93,6 +93,7 @@ void A4Warpping::warpping(const Img &src, Img &img, int *sx, int *sy, int *dx,
 //                  << "\n";
     }
     Mat mat = calcMat(dx, dy, sx, sy);  // 采用逆向映射
+//    std::cout << mat[0][0] << " " << mat[0][1] << " " << mat[0][2] << "\n" << mat[1][0] << " " << mat[1][1] << " " << mat[1][2] << "\n";
     cimg_forXY(img, x, y)  // 可优化为只遍历局部长方形区域，但当前题目A4纸占整个图
     {
         double fx = x + 0.5;
@@ -109,12 +110,8 @@ void A4Warpping::warpping(const Img &src, Img &img, int *sx, int *sy, int *dx,
             continue;
         double tx = mat[0][0] * fx + mat[0][1] * fy + mat[0][2];
         double ty = mat[1][0] * fx + mat[1][1] * fy + mat[1][2];
-        int intx = tx + 0.5;
-        if (intx + 0.5 == tx)
-            intx--;
-        int inty = ty + 0.5;
-        if (inty + 0.5 == ty)
-            inty--;
+        int intx = tx + 0.4999;
+        int inty = ty + 0.4999;
         if (resample) {
 
         } else {
