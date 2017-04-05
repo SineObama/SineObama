@@ -188,6 +188,17 @@ int main() {
                 int y[] = { 3, 3, 0, 0 };
                 int seq[] = { 0, 1, 2, 3 };
                 testWarpping(x, y, seq, 0);
+            } else if (s == "5552") {  // 单例测试矩阵求解功能
+                double mm[][4] = { { 0, 1, 1, 0 },
+                                  { 1, 0, 1, 1 },
+                                  { 0.5, 0, 1, 0 } };
+                double *m[] = { mm[0], mm[1], mm[2] };
+                A4Warpping::solve(m, 3);
+                for (int i = 0; i < 3; i++) {
+                    for (int j = 0; j < 4; j++)
+                        cout << m[i][j] << " ";
+                    cout << endl;
+                }
             } else {
                 ss >> precision >> threshold;
                 cached_edge = canny(s.c_str(), 2.5, 7.5, 4, 16, 0);
