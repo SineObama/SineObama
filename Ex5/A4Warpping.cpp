@@ -62,7 +62,30 @@ void A4Warpping::adjust(int *x, int *y) {
 }
 
 A4Warpping::Mat A4Warpping::calcMat(int *x, int *y, int *dx, int *dy) {
-
+    Mat mat;
+    double mm[3][4] = {};
+    double *m[] = {mm[0], mm[1], mm[2]};
+    for (int i = 0; i < 3; i++) {
+        m[i][0] = x[i];
+        m[i][1] = y[i];
+        m[i][2] = 1;
+        m[i][3] = dx[i];
+    }
+    solve(m, 3);
+    for (int i = 0; i < 3; i++) {
+        mat[0][i] = m[i][3];
+    }
+    for (int i = 0; i < 3; i++) {
+        m[i][0] = x[i];
+        m[i][1] = y[i];
+        m[i][2] = 1;
+        m[i][3] = dy[i];
+    }
+    solve(m, 3);
+    for (int i = 0; i < 3; i++) {
+        mat[1][i] = m[i][3];
+    }
+    return mat;
 }
 
 void A4Warpping::solve(double **m, int size) {
