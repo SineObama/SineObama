@@ -30,12 +30,17 @@ class A4Warpping {
     Img operator()(const Img &src, int *x, int *y, int width, int height);
 
     static void adjust(int *x, int *y);
+    // 基于3点三角形区域的形变
+    static void warpping(Img &img, int *sx, int *sy, int *dx, int *dy);
     // 由3点映射到3点的变换计算出变换矩阵
     static Mat calcMat(int *x, int *y, int *dx, int *dy);
     // 对size行size+1列的矩阵求解，最后一列是。。。
     static void solve(double **, int size);
 
  private:
+
+    static Img a4Warpping(const Img &src, int *x, int *y, int width,
+                          int height);
 
 };
 

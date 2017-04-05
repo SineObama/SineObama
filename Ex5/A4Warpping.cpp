@@ -18,27 +18,27 @@ A4Warpping::Img A4Warpping::operator()(const Img &src, int *x, int *y) {
 A4Warpping::Img A4Warpping::operator()(const Img &src, int *x, int *y,
                                        int width, int height) {
     adjust(x, y);
-    return src;
+    return a4Warpping(src, x, y, width, height);
 }
 
+// 调整4个点的顺序，从左上角开始，顺时针，对应下图。。。
+/**
+ * y
+ * |0     1
+ * |
+ * |        } height
+ * |
+ * |3     2
+ * 0------------x
+ *   width
+ */
 void A4Warpping::adjust(int *x, int *y) {
-    // 调整4个点的顺序，从左上角开始，顺时针，对应下图。。。
-    /**
-     * y
-     * |0     1
-     * |
-     * |        } height
-     * |
-     * |3     2
-     * 0------------x
-     *   width
-     */
 #define dis(a, b) sqrt((x[a] - x[b])*(x[a] - x[b]) + (y[a] - y[b])*(y[a] - y[b]))
 #define swap(a, b) { temp = x[a]; x[a] = x[b]; x[b] = temp;\
                      temp = y[a]; y[a] = y[b]; y[b] = temp; }
 #define checkSmaller(a, b) if (d##a > d##b) { swap(a, b) \
                       temp = d##a; d##a = d##b; d##b = temp; }
-    // 以一个点为基准，根据对其他3个点的距离调整其他三个点的位置，形成顺时针。但有可能存在上下左右的翻转
+    // 以一个点为基准，根据对其他3个点的距离调整其他三个点的位置，使之有序
     int temp;
     double d1 = dis(0, 1);
     double d2 = dis(0, 2);
@@ -63,8 +63,8 @@ void A4Warpping::adjust(int *x, int *y) {
 
 A4Warpping::Mat A4Warpping::calcMat(int *x, int *y, int *dx, int *dy) {
     Mat mat;
-    double mm[3][4] = {};
-    double *m[] = {mm[0], mm[1], mm[2]};
+    double mm[3][4] = { };
+    double *m[] = { mm[0], mm[1], mm[2] };
     for (int i = 0; i < 3; i++) {
         m[i][0] = x[i];
         m[i][1] = y[i];
@@ -115,4 +115,25 @@ void A4Warpping::solve(double **m, int size) {
             m[i][size] -= m[i][j] * m[j][size];
             m[i][j] = 0;
         }
+}
+
+// 把4个点分成2个三角形区域独立进行Warpping
+A4Warpping::Img A4Warpping::a4Warpping(const Img &src, int *x, int *y,
+                                       int width, int height) {
+    Img img(width, height, 1, src.spectrum());
+    {
+        int sx[3] = { x[0], x[1], x[3] };
+        int sy[3] = { y[0], y[1], y[3] };
+        int dx[3] = { 0, width - 1, 0 };
+        int dy[3] = { height - 1, height - 1, 0 };
+        warpping(img, sx, sy, dx, dy);
+    }
+    {
+        int sx[3] = { x[1], x[2], x[3] };
+        int sy[3] = { y[1], y[2], y[3] };
+        int dx[3] = { width - 1, width - 1, 0 };
+        int dy[3] = { height - 1, 0, 0 };
+        warpping(img, sx, sy, dx, dy);
+    }
+    return img;
 }
