@@ -12,10 +12,10 @@
 
 using namespace std;
 
-A4::A4(bool showHough, bool showLocalMax, bool showEquation)
+A4::A4(bool showHough, bool showLocalMax, bool showEquationAndIntersections)
         : showHough(showHough),
           showLocalMax(showLocalMax),
-          showEquation(showEquation),
+          showEquationAndIntersections(showEquationAndIntersections),
           srcWidth(1),
           srcHeight(1),
           y2p(1),
@@ -42,14 +42,15 @@ void A4::displayHough() {
     hough.display("hough", false);
 }
 
-A4::Img A4::operator()(const Img &edge, double precision, double scale,
-                       const Img &src) {
+A4::Img A4::operator()(const Img &src, const Img &edge, double precision,
+                       double scale) {
     houghSpace(edge, precision);
     if (showHough)
         displayHough();
     find4Lines(scale);
-    if (showEquation)
-        printEquations();
+    calcPoints();
+    if (showEquationAndIntersections)
+        printEquationsAndIntersections();
     if (showLocalMax)
         displayLocalMax();
     return drawLinesAndPoints(src);
@@ -135,13 +136,19 @@ A4::Equtions A4::find4Lines(double scale) {
     return equtions;
 }
 
-void A4::printEquations() {
+void A4::printEquationsAndIntersections() {
     int i = 1;
     if (equtions.size())
         for (Equtions::iterator it = equtions.begin(); it != equtions.end();
                 it++, i++)
             cout << i << ".\t" << it->p << "\t= x * " << it->cos << "\t+ y * "
                  << it->sin << endl;
+    else
+        cout << "no line" << endl;
+    if (intersections.size())
+        for (Points::iterator it = intersections.begin();
+                it != intersections.end(); it++, i++)
+            cout << "( " << it->x << "\t, " << it->y << "\t )" << endl;
     else
         cout << "no line" << endl;
 }
@@ -181,6 +188,10 @@ A4::Points A4::calcPoints() {
             }
         }
     }
+    return intersections;
+}
+
+A4::Points A4::getPoints() {
     return intersections;
 }
 

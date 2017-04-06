@@ -28,8 +28,8 @@ class A4 {
 
     A4(bool showHough, bool showLocalMax, bool showEquation);
 
-    Img operator()(const Img &edge, double precision, double scale,
-                   const Img &src);
+    Img operator()(const Img &src, const Img &edge, double precision = 0.2,
+                   double scale = 0.4);
 
     // 1. 根据边缘图计算Hough space
     Hough houghSpace(const Img &edge, double precision = 0.2);
@@ -38,9 +38,10 @@ class A4 {
 
     // 2. 从Hough space中找出A4纸4条边和其交点
     Equtions find4Lines(double scale = 0.4);
-    void printEquations();
+    void printEquationsAndIntersections();
     void displayLocalMax(double radiusScale = 0.005);
     Points calcPoints();
+    Points getPoints();
 
     // 3. 在图上标出线和交点
     Img drawLinesAndPoints();
@@ -57,7 +58,7 @@ class A4 {
         hough_t v;
     };
 
-    bool showHough, showLocalMax, showEquation;
+    bool showHough, showLocalMax, showEquationAndIntersections;
 
     int srcWidth, srcHeight;
     double y2p, x2theta;
@@ -70,9 +71,9 @@ class A4 {
     Hough houghSpace(const Img &edge, const int width, const int height,
                      bool unused);
     static HoughPointInfo getLocalMax(const Hough &hough, const int width,
-                                     const int height, const int x, const int y,
-                                     const hough_t threshold,
-                                     bool ** const checked);
+                                      const int height, const int x,
+                                      const int y, const hough_t threshold,
+                                      bool ** const checked);
 };
 
 #endif /* A4_H_ */

@@ -57,12 +57,12 @@ void testWarpping(const int *x, const int *y, int *seq, int index) {
 int main() {
     setbuf(stdout, NULL);
 
-    bool showEdge, showHough, showLocalMax, showEquation;
-    cout << "enter 4 boolean value for whether display the edge, the hough space, local max and show the linear equations:\n-->";
-    cin >> showEdge >> showHough >> showLocalMax >> showEquation;
-    cout << "enter the filename, precision and scale each time in one line.\n";
+    bool showEdge, showHough, showLocalMax, showEquationAndIntersection;
+    cout << "enter 4 boolean value for whether display the edge, the hough space, local max and show the linear equations and intersections:\n-->";
+    cin >> showEdge >> showHough >> showLocalMax >> showEquationAndIntersection;
+    cout << "enter the filename each time in one line. (default parameters are used)\n";
     A4Warpping a4Warpping;
-    A4 a4(showHough, showLocalMax, showEquation);
+    A4 a4(showHough, showLocalMax, showEquationAndIntersection);
     MyCanny canny(0, 0, 0);
     string s, srcName;
     Img cached_edge;
@@ -75,7 +75,6 @@ int main() {
         cin.sync();
         cin.clear();
         char in[1000] = { 0 };
-        double threshold = 0.5, precision = 0.2;
         string filename;
         cin.getline(in, 1000);
         if (in[0] == '\0')
@@ -165,7 +164,7 @@ int main() {
                     a4.find4Lines(scale);
                 }
                 cached_points = a4.calcPoints();
-                a4.printEquations();
+                a4.printEquationsAndIntersections();
                 a4.displayLocalMax();
             } else if (s == "4") {  // 在指定图上绘制直线
                 if (!ss.good()) {
@@ -255,15 +254,21 @@ int main() {
                 src.display();
                 dst.display();
             } else {
-                ss >> precision >> threshold;
                 cached_edge = canny(s.c_str(), 2.5, 7.5, 4, 16, 0);
                 if (showEdge)
-                    cached_edge.display("edge", false);
+                    cached_edge.display("edge detection", false);
                 cout << "edge detect complete...\n";
-                Img result = a4(cached_edge, precision, threshold,
-                                Img(s.c_str()));
-                cout << "algorithm complete...\n";
-                result.save("result"POSTFIX);
+                Img src(s.c_str());
+                a4(src, cached_edge).display("A4 edges and points", false);
+                cached_points = a4.getPoints();
+                int x[4], y[4];
+                for (int i = 0; i < 4; i++) {
+                    x[i] = cached_points[i].x;
+                    y[i] = cached_points[i].y;
+                }
+                cached_A4 = a4Warpping(src, x, y, true);
+                cached_A4.display("A4", false);
+                cached_A4.save("result"POSTFIX);
                 cout << "result saved.\n";
             }
         } catch (exception &e) {
