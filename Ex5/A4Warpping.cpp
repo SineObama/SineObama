@@ -16,8 +16,8 @@ A4Warpping::Img A4Warpping::operator()(const Img &src, int *x, int *y,
                                        bool resample, bool affine) {
     adjust(x, y);
 #define dis(a, b) sqrt((x[a] - x[b])*(x[a] - x[b]) + (y[a] - y[b])*(y[a] - y[b]))
-    int width = dis(0, 1) + 0.5;  // 四舍五入
-    int height = dis(0, 3) + 0.5;
+    const int width = dis(0, 1) + 0.5;  // 四舍五入
+    const int height = dis(0, 3) + 0.5;
     if (affine)
         return a4Affine(src, x, y, width, height, resample);
     else
@@ -81,9 +81,9 @@ void A4Warpping::affine(const Img &src, Img &img, int *sx, int *sy, int *dx,
         bool pos;  // 第三个点带入直线方程，结果是否大于0。用于判断点是否在此直线的一侧
     } lines[3];
     for (int i = 0; i < 3; i++) {
-        double x1 = dx[i], x2 = dx[(i + 1) % 3], x3 = dx[(i + 2) % 3];
-        double y1 = dy[i], y2 = dy[(i + 1) % 3], y3 = dy[(i + 2) % 3];
-        double de = x1 * y2 - x2 * y1;
+        const double x1 = dx[i], x2 = dx[(i + 1) % 3], x3 = dx[(i + 2) % 3];
+        const double y1 = dy[i], y2 = dy[(i + 1) % 3], y3 = dy[(i + 2) % 3];
+        const double de = x1 * y2 - x2 * y1;
         if (de == 0) {
             if (y1 != 0 || x1 != 0) {
                 lines[i].a = y1;
@@ -113,10 +113,10 @@ void A4Warpping::affine(const Img &src, Img &img, int *sx, int *sy, int *dx,
         }
         if (!in)
             continue;
-        double tx = mat[0][0] * x + mat[0][1] * y + mat[0][2];
-        double ty = mat[1][0] * x + mat[1][1] * y + mat[1][2];
-        int intx = tx + 0.5;
-        int inty = ty + 0.5;
+        const double tx = mat[0][0] * x + mat[0][1] * y + mat[0][2];
+        const double ty = mat[1][0] * x + mat[1][1] * y + mat[1][2];
+        const int intx = tx + 0.5;
+        const int inty = ty + 0.5;
         if (resample) {
 
         } else {
@@ -285,8 +285,10 @@ A4Warpping::Img A4Warpping::a4Perspective(const Img &src, int *x, int *y,
         v1[1] = y;
         v1[2] = 1;
         multiply(m, v1, v2, 3);
-        int intx = v2[0] / v2[2] + 0.5;
-        int inty = v2[1] / v2[2] + 0.5;
+        const double tx = v2[0] / v2[2];
+        const double ty = v2[1] / v2[2];
+        int intx = tx + 0.5;
+        int inty = ty + 0.5;
         if (intx >= srcWidth || intx < 0 || inty >= srcHeight || inty < 0)
             continue;
         if (resample) {
