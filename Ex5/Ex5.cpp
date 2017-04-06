@@ -58,6 +58,7 @@ int main() {
     setbuf(stdout, NULL);
 
     bool showEdge, showHough, showLocalMax, showEquationAndIntersection;
+    cout << "本程序对包含A4纸的bmp图像进行处理，裁剪得到比例正确的A4纸\n";
     cout << "enter 4 boolean value for whether display the edge, the hough space, local max and show the linear equations and intersections:\n-->";
     cin >> showEdge >> showHough >> showLocalMax >> showEquationAndIntersection;
     cout << "enter the filename each time in one line. (default parameters are used)\n";
@@ -84,6 +85,7 @@ int main() {
         ss >> s;
         try {
             /**
+             * 注意：以下文件名不需要写后缀.bmp
              * 1  边缘检测
              * 1  filename
              * 1  filename lowthreshold highthreshold gaussiankernelradius gaussiankernelwidth contrastnormalised

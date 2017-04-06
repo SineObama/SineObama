@@ -16,8 +16,12 @@ A4Warpping::Img A4Warpping::operator()(const Img &src, int *x, int *y,
                                        bool interpolation, bool affine) {
     adjust(x, y);
 #define dis(a, b) sqrt((x[a] - x[b])*(x[a] - x[b]) + (y[a] - y[b])*(y[a] - y[b]))
-    const int width = dis(0, 1) + 0.5;  // 四舍五入
-    const int height = dis(0, 3) + 0.5;
+    int width = dis(0, 1) + 0.5;  // 四舍五入
+    int height = dis(0, 3) + 0.5;
+    if (width / 210.0 * 297 > height)
+        height = width / 210.0 * 297 + 0.5;
+    else
+        width = height / 297.0 * 210 + 0.5;
     if (affine)
         return a4Affine(src, x, y, width, height, interpolation);
     else
@@ -26,8 +30,7 @@ A4Warpping::Img A4Warpping::operator()(const Img &src, int *x, int *y,
 
 A4Warpping::Img A4Warpping::operator()(const Img &src, int *x, int *y,
                                        int width, int height,
-                                       bool interpolation,
-                                       bool affine) {
+                                       bool interpolation, bool affine) {
     adjust(x, y);
     if (affine)
         return a4Affine(src, x, y, width, height, interpolation);
