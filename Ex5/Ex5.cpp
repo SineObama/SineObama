@@ -217,69 +217,25 @@ int main() {
                 int seq[] = { 0, 1, 2, 3 };
                 testWarpping(x, y, seq, 0);
             } else if (s == "5552") {  // 单例测试矩阵求解功能
-                bool testAffineMat = false;
-                if (testAffineMat) {
-                    double mm[][4] = { { 0, 1, 1, 0 }, { 1, 0, 1, 1 }, { 0.5,
-                                                                         0,
-                                                                         1,
-                                                                         0 } };
-                    double *m[] = { mm[0], mm[1], mm[2] };
-                    A4Warpping::solve(m, 3);
-                    for (int i = 0; i < 3; i++) {
-                        for (int j = 0; j < 4; j++)
-                            cout << m[i][j] << " ";
-                        cout << endl;
-                    }
-                } else {
-                    const int w = 200, h = 200;
-                    double mm[8][9] = { 0 };
-                    double *m[] = { mm[0],
-                                    mm[1],
-                                    mm[2],
-                                    mm[3],
-                                    mm[4],
-                                    mm[5],
-                                    mm[6],
-                                    mm[7] };
-                    double sx[4] = { 10, 40, 50, 0 };
-                    double sy[4] = { 30, 30, 0, 0 };
-                    double dx[4] = { 0, w, w, 0 };
-                    double dy[4] = { h, h, 0, 0 };
-                    for (int i = 0; i < 4; i++) {
-                        m[i * 2][0] = sx[i];
-                        m[i * 2][1] = sy[i];
-                        m[i * 2][2] = 1;
-                        m[i * 2 + 1][3] = sx[i];
-                        m[i * 2 + 1][4] = sy[i];
-                        m[i * 2 + 1][5] = 1;
-                        m[i * 2][6] = -sx[i] * dx[i];
-                        m[i * 2][7] = -sy[i] * dx[i];
-                        m[i * 2 + 1][6] = -sx[i] * dy[i];
-                        m[i * 2 + 1][7] = -sy[i] * dy[i];
-                        m[i * 2][8] = dx[i];
-                        m[i * 2 + 1][8] = dy[i];
-                    }
-                    for (int i = 0; i < 8; i++) {
-                        for (int j = 0; j < 9; j++)
-                            cout << m[i][j] << "\t";
-                        cout << endl;
-                    }
+                double mm[][4] = { { 0, 1, 1, 0 }, { 1, 0, 1, 1 }, { 0.5,
+                                                                     0,
+                                                                     1,
+                                                                     0 } };
+                double *m[] = { mm[0], mm[1], mm[2] };
+                A4Warpping::solve(m, 3, 4);
+                for (int i = 0; i < 3; i++) {
+                    for (int j = 0; j < 4; j++)
+                        cout << m[i][j] << " ";
                     cout << endl;
-                    A4Warpping::solve(m, 3);
-                    for (int i = 0; i < 8; i++) {
-                        for (int j = 0; j < 9; j++)
-                            cout << m[i][j] << "\t";
-                        cout << endl;
-                    }
                 }
             } else if (s == "5553") {  // 测试三点形变
-                Img src(200, 200);
+                Img src(201, 201);
                 src.fill(0);
                 cimg_forXY(src, x, y)
                 {
                     src(x, y) = y;
                 }
-                Img dst(200, 200);
+                Img dst(201, 201);
                 dst.fill(0);
                 int x[3] = { 0, 200, 0 };
                 int y[3] = { 200, 200, 0 };

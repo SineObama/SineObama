@@ -26,9 +26,10 @@ class A4Warpping {
     A4Warpping();
 
     // 输入图像和4个角点的xy坐标
-    Img operator()(const Img &src, int *x, int *y, bool resample);
+    Img operator()(const Img &src, int *x, int *y, bool resample, bool affine =
+            false);
     Img operator()(const Img &src, int *x, int *y, int width, int height,
-                   bool resample);
+                   bool resample, bool affine = false);
 
     // 调整顺序
     static void adjust(int *x, int *y);
@@ -37,10 +38,17 @@ class A4Warpping {
                        int *dy, bool resample = false);
     // 输入3对点，算出仿射变换矩阵
     static Mat affineMat(int *sx, int *sy, int *dx, int *dy);
-    // 对size行size+1列的矩阵求解，最后一列是。。。
-    static void solve(double **, int size);
+    // 输入3对点，算出仿射变换矩阵
+    static Mat perspectiveMat(int *sx, int *sy, int *dx, int *dy);
+    // 对row*row的矩阵求解，最后一列是。。。
+    static void solve(double **, const int row, const int column);
+    // 正方形矩阵乘以向量
+    static void multiply(const double * const *m, const double *src,
+                         double *dst, int size);
 
  private:
+
+    static const double precision = 0.0001;
 
     static Img a4Affine(const Img &src, int *x, int *y, int width, int height,
                         bool resample);
