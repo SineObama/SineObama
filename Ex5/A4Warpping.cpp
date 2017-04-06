@@ -13,25 +13,26 @@ A4Warpping::A4Warpping() {
 }
 
 A4Warpping::Img A4Warpping::operator()(const Img &src, int *x, int *y,
-                                       bool resample, bool affine) {
+                                       bool interpolation, bool affine) {
     adjust(x, y);
 #define dis(a, b) sqrt((x[a] - x[b])*(x[a] - x[b]) + (y[a] - y[b])*(y[a] - y[b]))
     const int width = dis(0, 1) + 0.5;  // 四舍五入
     const int height = dis(0, 3) + 0.5;
     if (affine)
-        return a4Affine(src, x, y, width, height, resample);
+        return a4Affine(src, x, y, width, height, interpolation);
     else
-        return a4Perspective(src, x, y, width, height, resample);
+        return a4Perspective(src, x, y, width, height, interpolation);
 }
 
 A4Warpping::Img A4Warpping::operator()(const Img &src, int *x, int *y,
-                                       int width, int height, bool resample,
+                                       int width, int height,
+                                       bool interpolation,
                                        bool affine) {
     adjust(x, y);
     if (affine)
-        return a4Affine(src, x, y, width, height, resample);
+        return a4Affine(src, x, y, width, height, interpolation);
     else
-        return a4Perspective(src, x, y, width, height, resample);
+        return a4Perspective(src, x, y, width, height, interpolation);
 }
 
 // 调整4个点的顺序，从左上角开始，顺时针，对应下图。。。
@@ -74,7 +75,8 @@ void A4Warpping::adjust(int *x, int *y) {
 }
 
 void A4Warpping::affine(const Img &src, Img &img, int *sx, int *sy, int *dx,
-                        int *dy, bool resample) {
+                        int *dy, bool interpolation) {
+    const int srcWidth = src.width(), srcHeight = src.height();
     struct Line {
         // ax + by + c =0
         double a, b, c;
@@ -117,13 +119,17 @@ void A4Warpping::affine(const Img &src, Img &img, int *sx, int *sy, int *dx,
         const double ty = mat[1][0] * x + mat[1][1] * y + mat[1][2];
         const int intx = tx + 0.5;
         const int inty = ty + 0.5;
-        if (resample) {
-
+        if (intx >= srcWidth || intx < 0 || inty >= srcHeight || inty < 0)
+            continue;
+        if (interpolation) {
+            img(x, y, 0) = linearInterpolation2D(src, tx, ty, 0);
+            if (img.spectrum() == 3) {
+                img(x, y, 1) = linearInterpolation2D(src, tx, ty, 1);
+                img(x, y, 2) = linearInterpolation2D(src, tx, ty, 2);
+            }
         } else {
-            if (img.spectrum() == 1) {
-                img(x, y) = src(intx, inty);
-            } else {
-                img(x, y, 0) = src(intx, inty, 0);
+            img(x, y, 0) = src(intx, inty, 0);
+            if (img.spectrum() == 3) {
                 img(x, y, 1) = src(intx, inty, 1);
                 img(x, y, 2) = src(intx, inty, 2);
             }
@@ -248,21 +254,21 @@ void A4Warpping::multiply(const double * const *m, const double *src,
 
 // 把4个点分成2个三角形区域分别进行仿射
 A4Warpping::Img A4Warpping::a4Affine(const Img &src, int *x, int *y, int width,
-                                     int height, bool resample) {
+                                     int height, bool interpolation) {
     Img img(width, height, 1, src.spectrum());
     {
         int sx[3] = { x[0], x[1], x[3] };
         int sy[3] = { y[0], y[1], y[3] };
         int dx[3] = { 0, width - 1, 0 };
         int dy[3] = { height - 1, height - 1, 0 };
-        affine(src, img, sx, sy, dx, dy, resample);
+        affine(src, img, sx, sy, dx, dy, interpolation);
     }
     {
         int sx[3] = { x[1], x[2], x[3] };
         int sy[3] = { y[1], y[2], y[3] };
         int dx[3] = { width - 1, width - 1, 0 };
         int dy[3] = { height - 1, 0, 0 };
-        affine(src, img, sx, sy, dx, dy, resample);
+        affine(src, img, sx, sy, dx, dy, interpolation);
     }
     return img;
 }
@@ -270,7 +276,7 @@ A4Warpping::Img A4Warpping::a4Affine(const Img &src, int *x, int *y, int width,
 // 由4个点直接进行透视
 A4Warpping::Img A4Warpping::a4Perspective(const Img &src, int *x, int *y,
                                           int width, int height,
-                                          bool resample) {
+                                          bool interpolation) {
     const int srcWidth = src.width(), srcHeight = src.height();
     Img img(width, height, 1, src.spectrum());
     img.fill(0);
@@ -291,17 +297,56 @@ A4Warpping::Img A4Warpping::a4Perspective(const Img &src, int *x, int *y,
         int inty = ty + 0.5;
         if (intx >= srcWidth || intx < 0 || inty >= srcHeight || inty < 0)
             continue;
-        if (resample) {
-
+        if (interpolation) {
+            img(x, y, 0) = linearInterpolation2D(src, tx, ty, 0);
+            if (img.spectrum() == 3) {
+                img(x, y, 1) = linearInterpolation2D(src, tx, ty, 1);
+                img(x, y, 2) = linearInterpolation2D(src, tx, ty, 2);
+            }
         } else {
-            if (img.spectrum() == 1) {
-                img(x, y) = src(intx, inty);
-            } else {
-                img(x, y, 0) = src(intx, inty, 0);
+            img(x, y, 0) = src(intx, inty, 0);
+            if (img.spectrum() == 3) {
                 img(x, y, 1) = src(intx, inty, 1);
                 img(x, y, 2) = src(intx, inty, 2);
             }
         }
     }
     return img;
+}
+
+unsigned char A4Warpping::linearInterpolation2D(const Img &img, double x,
+                                                double y, int c) {
+    const int w = img.width(), h = img.height();
+    int intx = x;
+    int inty = y;
+    double up = 0, down = 0, mid = 0;
+    int count = 0, count2 = 0;
+    // down
+#define LEGAL(x, y) ((x) >= 0 && (x) < w && (y) >= 0 && (y) < h)
+#define HEHE(direct, x, y) \
+    if (LEGAL(x, y)) {\
+        count++;\
+        direct += img(x, y, c);\
+    }
+    HEHE(down, intx, inty);
+    HEHE(down, intx + 1, inty);
+    if (count) {
+        down /= count;
+        count2++;
+        mid += down;
+        count = 0;
+    }
+    HEHE(up, intx, inty + 1);
+    HEHE(up, intx + 1, inty + 1);
+#undef HEHE
+#undef LEGAL
+    if (count) {
+        up /= count;
+        count2++;
+        mid += up;
+        count = 0;
+    }
+    if (count2)
+        mid /= count2;
+    return mid;
 }

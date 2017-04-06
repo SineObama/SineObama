@@ -26,16 +26,16 @@ class A4Warpping {
     A4Warpping();
 
     // 输入图像和4个角点的xy坐标
-    Img operator()(const Img &src, int *x, int *y, bool resample, bool affine =
-            false);
+    Img operator()(const Img &src, int *x, int *y, bool interpolation,
+                   bool affine = false);
     Img operator()(const Img &src, int *x, int *y, int width, int height,
-                   bool resample, bool affine = false);
+                   bool interpolation, bool affine = false);
 
     // 调整顺序
     static void adjust(int *x, int *y);
     // 仿射
     static void affine(const Img &src, Img &img, int *sx, int *sy, int *dx,
-                       int *dy, bool resample = false);
+                       int *dy, bool interpolation = false);
     // 输入3对点，算出仿射变换矩阵
     static Mat affineMat(int *sx, int *sy, int *dx, int *dy);
     // 输入3对点，算出仿射变换矩阵
@@ -51,9 +51,11 @@ class A4Warpping {
     static const double precision = 0.0001;
 
     static Img a4Affine(const Img &src, int *x, int *y, int width, int height,
-                        bool resample);
+                        bool interpolation);
     static Img a4Perspective(const Img &src, int *x, int *y, int width,
-                             int height, bool resample);
+                             int height, bool interpolation);
+    static unsigned char linearInterpolation2D(const Img &img, double x,
+                                               double y, int c);
 
 };
 

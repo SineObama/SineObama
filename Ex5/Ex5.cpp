@@ -107,8 +107,8 @@ int main() {
              * 4  filename red green blue
              *
              * 5  Warpping              # 依赖上一步
-             * 5  .                     # 使用第一步的图片
-             * 5  filename
+             * 5  interpolation .       # 使用第一步的图片
+             * 5  interpolation filename
              *
              * 11,22,44,55分别保存最近的一次结果
              */
@@ -188,6 +188,8 @@ int main() {
                 }
                 cached_result.display("result", false);
             } else if (s == "5") {  // 进行A4纸Warpping
+                bool interpolation = false;
+                ss >> interpolation;
                 if (!ss.good()) {
                     cout << "please input filename" << endl;
                 } else {
@@ -200,7 +202,7 @@ int main() {
                         x[i] = cached_points[i].x;
                         y[i] = cached_points[i].y;
                     }
-                    cached_A4 = a4Warpping(src, x, y, false);
+                    cached_A4 = a4Warpping(src, x, y, interpolation);
                     cached_A4.display("A4", false);
                 }
             } else if (s == "11") {
