@@ -14,7 +14,7 @@ class SVM {
 
  public:
 
-    typedef double data_t;
+    typedef float data_t;
 
     static void train(const data_t * const *yx, const int l, const int n, data_t *bw);
     static void predict(data_t **yx, const int l, const int n, data_t *bw);
