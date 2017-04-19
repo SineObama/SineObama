@@ -16,7 +16,8 @@ class SVM {
 
     typedef float data_t;
 
-    static void train(const data_t * const *yx, const int l, const int n, data_t *bw);
+    static void train(const data_t * const *yx, const int l, const int n,
+                      const data_t C, data_t *bw, const int iterations);
     static void predict(data_t **yx, const int l, const int n, data_t *bw);
 
  private:

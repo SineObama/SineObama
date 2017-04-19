@@ -14,9 +14,8 @@ SVM::SVM() {
 }
 
 void SVM::train(const data_t * const *yx, const int l, const int n,
-                data_t *bw) {
-    static const data_t C = 0.2;
-    int times = 0;
+                const data_t C, data_t *bw, const int iterations) {
+    int times = 0, precentage = 0;
     data_t *a = new data_t[l];
     data_t *Q = new data_t[l];
     for (int i = 0; i < l; i++) {
@@ -26,7 +25,7 @@ void SVM::train(const data_t * const *yx, const int l, const int n,
         Q[i] = sum;
     }
     memset(a, 0, sizeof(data_t) * l);
-    while (times < 100) {
+    while (times < iterations) {
         int count = 0;
         time_t start = time(NULL);
         for (int i = 0; i < l; i++) {  // Ë³Ğò¸üĞÂ
@@ -47,13 +46,17 @@ void SVM::train(const data_t * const *yx, const int l, const int n,
                 bw[j] += gap * yx[i][0] * yx[i][j];
         }
         time_t end = time(NULL);
-        if ((times + 1) % 10 == 0) {
-            std::cout << "iteration: " << times + 1 << "\n";
-            std::cout << "too big rate: " << (float) count / l << "\n";
-            std::cout << "second: " << end - start << "\n";
+//        std::cout << "iteration: " << times + 1 << "\n";
+//        std::cout << "too big rate: " << (float) count / l << "\n";
+//        std::cout << "second: " << end - start << "\n";
+        int newprecentage = (float) (times + 1) / iterations * 100;
+        if (precentage < newprecentage) {
+            precentage = newprecentage;
+            std::cout << ".";
         }
         times++;
     }
+    std::cout << "\n";
 }
 
 void SVM::predict(data_t **yx, const int l, const int n, data_t *bw) {
