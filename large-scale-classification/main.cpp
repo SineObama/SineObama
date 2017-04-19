@@ -107,8 +107,15 @@ int main(int argc, char **argv) {
 //           << len << "__" << correct << "%.o";
         pFile = fopen(outputFilename, "w");
         fprintf(pFile, "id,label,correctness=%.2"FORMAT"%%\n", correct);
-        for (int i = 0; i < len; i++)
+        for (int i = 0; i < len; i++) {
+            if (yx[i][0] < -1)
+                yx[i][0] = 0;
+            else if (yx[i][0] > 1)
+                yx[i][0] = 1;
+            else
+                yx[i][0] = (yx[i][0] + 1) / 2;
             fprintf(pFile, "%d,%"FORMAT"\n", i, yx[i][0]);
+        }
         fclose(pFile);
         cout << "result saved in <" << outputFilename << ">\n";
 
