@@ -9,6 +9,7 @@
 #include <iostream>
 #include <cstring>
 #include <ctime>
+#include <windows.h>
 
 SVM::SVM() {
 }
@@ -17,6 +18,7 @@ void SVM::train(const data_t * const *yx, const int l, const int n,
                 const data_t C, data_t *bw, const int iterations) {
     int times = 0, precentage = 0;
     data_t *a = new data_t[l];
+    memset(a, 0, sizeof(data_t) * l);
     data_t *Q = new data_t[l];
     for (int i = 0; i < l; i++) {
         data_t sum = 0;
@@ -24,10 +26,10 @@ void SVM::train(const data_t * const *yx, const int l, const int n,
             sum += yx[i][j] * yx[i][j];
         Q[i] = sum;
     }
-    memset(a, 0, sizeof(data_t) * l);
+    bool showed = false;
     while (times < iterations) {
         int count = 0;
-        time_t start = time(NULL);
+        DWORD start = GetTickCount();
         for (int i = 0; i < l; i++) {  // Ë³Ðò¸üÐÂ
             data_t wx = bw[0];
             for (int j = 1; j < n + 1; j++)
@@ -45,10 +47,13 @@ void SVM::train(const data_t * const *yx, const int l, const int n,
             for (int j = 1; j < n + 1; j++)
                 bw[j] += gap * yx[i][0] * yx[i][j];
         }
-        time_t end = time(NULL);
-//        std::cout << "iteration: " << times + 1 << "\n";
-//        std::cout << "too big rate: " << (float) count / l << "\n";
-//        std::cout << "second: " << end - start << "\n";
+        if (!showed) {
+            showed = true;
+            DWORD end = GetTickCount();
+            std::cout << "iteration: " << times + 1 << "\n";
+            std::cout << "too big rate: " << (float) count / l << "\n";
+            std::cout << "milliseconds: " << end - start << "\n";
+        }
         int newprecentage = (float) (times + 1) / iterations * 100;
         if (precentage < newprecentage) {
             precentage = newprecentage;
