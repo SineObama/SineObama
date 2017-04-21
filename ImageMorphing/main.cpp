@@ -43,11 +43,6 @@ void test_inCircle2() {
 }
 
 int main() {
-    std::cout
-            << acos(-1) << std::endl;
-    std::cout
-            << (((-6) * 94 + (-6) * 94) / sqrt((-6) * (-6) + (-6) * (-6))
-                    / sqrt(94 * 94 + 94 * 94)) << std::endl;
     test_inCircle2();
     Points s, d;
     deal(Img("1.bmp"), s, Img("2.bmp"), d, 11);
