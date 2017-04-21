@@ -11,6 +11,59 @@
 
 using namespace ImageMorphing;
 
+void test_deal() {
+    int n;
+    std::cin >> n;
+    Points s, d;
+    const int width = 490, height = 700;
+    const double scalex = (double) 323 / width, scaley = (double) 399 / height;
+    s.push_back(Point(0, 0));
+    s.push_back(Point(width - 1, 0));
+    s.push_back(Point(width - 1, height - 1));
+    s.push_back(Point(0, height - 1));
+    d.push_back(Point(0, 0));
+    d.push_back(Point(width - 1, 0));
+    d.push_back(Point(width - 1, height - 1));
+    d.push_back(Point(0, height - 1));
+    int x, y;
+    for (int i = 0; i < n; i++) {
+        std::cin >> x >> y;
+        s.push_back(Point(x, y));
+    }
+    for (int i = 0; i < n; i++) {
+        std::cin >> x >> y;
+        d.push_back(Point(x / scalex, y / scaley));
+    }
+//    Img src(width, height), dst(width, height);
+//    cimg_forXY(src, x, y)
+//    {
+//        src(x, y) = (float) (x + y) / (width + height) * 255;
+//        dst(x, y) = (float) (x + y) / (width + height) * 255;
+//    }
+//    deal(src, s, dst, d, 11);
+    Img img2(width, height, 1, 3), img("2.bmp");
+    cimg_library::CImg<float> scale(width, height, 1, 2);
+    cimg_forXY(img, x, y)
+    {
+        img2(x, y, 0, 0) = img(x, y, 0, 0);
+        img2(x, y, 0, 1) = img(x, y, 0, 1);
+        img2(x, y, 0, 2) = img(x, y, 0, 2);
+    }
+    cimg_forXY(scale, x, y)
+    {
+        scale(x, y, 0, 0) = x * scalex;
+        scale(x, y, 0, 1) = y * scaley;
+    }
+    img2.warp(scale).display("scale");
+    deal(Img("1.bmp"), s ,img2, d, 11);
+}
+
+int main() {
+    test_deal();
+//    Points s, d;
+//    deal(Img("1.bmp"), s, Img("2.bmp"), d, 11);
+}
+
 void test_inTriangle() {
     cimg_library::CImg<unsigned char> img(400, 400);
     int x, y;
@@ -27,12 +80,6 @@ void test_inTriangle() {
         }
     }
     img.display();
-}
-
-int main() {
-    test_inTriangle();
-//    Points s, d;
-//    deal(Img("1.bmp"), s, Img("2.bmp"), d, 11);
 }
 
 void test_divide() {

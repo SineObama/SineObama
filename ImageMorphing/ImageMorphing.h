@@ -60,7 +60,10 @@ Img drawTriangle(Img, const Points, const Triangles,
                  const unsigned char *inputColor = NULL);
 
 Img drawPoint(Img, const Points, int radius, const unsigned char *inputColor =
-        NULL);
+NULL);
+
+Img drawPointAndTriangle(Img, const Points, int radius, const Triangles,
+                         const unsigned char *inputColor = NULL);
 
 }
 

@@ -10,59 +10,76 @@
 
 namespace ImageMorphing {
 
+typedef float calc_t;
+
 // 变换矩阵
 struct Mat {
-    double p[3][3];
-    double *operator[](int i) {
+    calc_t p[3][3];
+    calc_t *operator[](int i) {
         return p[i];
     }
 };
 Mat affineMat(int *sx, int *sy, int *dx, int *dy);
 
+typedef cimg_library::CImg<calc_t> Warp;
+
 Imgs deal(Img src, Points s, Img dst, Points d, int frames) {
 
     // 三角剖分
-    const Triangles t = divide(s);
+    const Triangles triangles = divide(s);
 
     // 展示结果
-    Img pointed = drawPoint(src, s, 4);
-    drawTriangle(pointed, s, t).display("三角剖分结果");
+    drawPointAndTriangle(src, s, 4, triangles).display("三角剖分结果");
+    drawPointAndTriangle(dst, d, 4, triangles).display("对应目标图剖分");
 
-    // 计算最终warping，采用逆向相对映射"backward-relative"
     const int width = src.width();
     const int height = src.height();
-    const int depth = src.depth();
-    const int spectrum = src.spectrum();
-    Img swarp(width, height, depth, spectrum);
-    Img dwarp(width, height, depth, spectrum);
-    for (Triangles::const_iterator it = t.begin(); it != t.end(); it++) {
 
-#define p(l, n) Point l##p##n = l[it->i[n]]
-#define array(l, i) int l##i[3] = { (l##p##0).i, (l##p##1).i, (l##p##2).i }
+    // 计算最终的2D warping，采用逆向相对映射"backward-relative"
+    Warp swarp(width, height, 1, 2);
+    Warp dwarp(width, height, 1, 2);
+    for (Triangles::const_iterator it = triangles.begin();
+            it != triangles.end(); it++) {
 
-        p(s, 0);
-        p(s, 1);
-        p(s, 2);
-        p(d, 0);
-        p(d, 1);
-        p(d, 2);
-        array(s, x);
-        array(s, y);
-        array(d, x);
-        array(d, y);
+#define calc_p(l, n) Point l##p##n = l[it->i[n]]
+#define calc_array(l, i) int l##i[3] = { (l##p##0).i, (l##p##1).i, (l##p##2).i }
 
-#undef array
-#undef p
+        calc_p(s, 0);
+        calc_p(s, 1);
+        calc_p(s, 2);
+        calc_p(d, 0);
+        calc_p(d, 1);
+        calc_p(d, 2);
+        calc_array(s, x);
+        calc_array(s, y);
+        calc_array(d, x);
+        calc_array(d, y);
 
-        Mat sm = affineMat(dx, dy, sx, sy);
-        cimg_forXY(src, x, y)
-        {  // todo 优化：缩小检测范围
+#undef calc_array
+#undef calc_p
 
-        }
-
-//        Mat dm = affineMat(sx, sy, dx, dy);
-
+// todo 优化：缩小检测范围
+#define calc_warp(f, t) \
+    Mat f##m = affineMat(t##x, t##y, f##x, f##y);\
+    cimg_forXY(t##warp, x, y)\
+    {  \
+        if (inTriangle(Point(x, y), t##p0, t##p1, t##p2)) {\
+            t##warp(x, y, 0, 0) = f##m[0][0] * x + f##m[0][1] * y + f##m[0][2] - x;\
+            t##warp(x, y, 0, 1) = f##m[1][0] * x + f##m[1][1] * y + f##m[1][2] - y;\
+        }\
     }
+
+        calc_warp(s, d);
+        calc_warp(d, s);
+
+#undef calc_warp
+
+    }  // end for (triangles)
+
+    drawPointAndTriangle(src.get_warp(swarp, 1), d, 4, triangles).display(
+            "原图最终形变");
+    drawPointAndTriangle(dst.get_warp(dwarp, 1), s, 4, triangles).display(
+            "目标图最初形变");
 
     Imgs imgs;
     return imgs;
@@ -137,7 +154,7 @@ Triangles divide(Points points) {
 }
 
 #define calc_vi(s, d, i) const double v##s##d##i = (p##d).i - (p##s).i
-#define calc_v(s, d) calc_vi(s,d,x); calc_vi(s,d,y);
+#define calc_v(s, d) calc_vi(s, d, x); calc_vi(s, d, y);
 #define calc_cross(a, b, c) const double cross##a##b##c = \
     (v##b##a##x * v##b##c##y - v##b##c##x * v##b##a##y)
 
@@ -153,7 +170,7 @@ bool inCircle(Point p0, Point p1, Point p2, Point p3) {
     else if (cos##a##b##c > 1 && cos##a##b##c < 1 + precision)\
         cos##a##b##c = 1;\
     const double angle##a##b##c = acos(cos##a##b##c);
-// 计算角abc相关的东西，包括最终用到的弧度值和两向量叉积(baXbc)，中间变量有向量的xy值和长度
+// 计算包括最终用到的弧度值和两向量叉积(baXbc)，中间变量有向量的xy值和长度
 #define calc_all(a, b, c) \
     calc_vi(b, a, x);\
     calc_vi(b, a, y);\
@@ -229,14 +246,20 @@ Img drawTriangle(Img img, const Points points, const Triangles triangles,
     return img;
 }
 
-Img drawPoint(Img img, const Points p, int radius,
+Img drawPoint(Img img, const Points points, int radius,
               const unsigned char *inputColor) {
     static const unsigned char defaultColor[] = { 255, 255, 255 };
     const unsigned char *color = inputColor == NULL ? defaultColor : inputColor;
-    for (Points::const_iterator it = p.begin(); it != p.end(); it++) {
+    for (Points::const_iterator it = points.begin(); it != points.end(); it++)
         img.draw_circle(it->x, it->y, radius, color);
-    }
     return img;
+}
+
+Img drawPointAndTriangle(Img img, const Points points, int radius,
+                         const Triangles triangles,
+                         const unsigned char *inputColor) {
+    return drawTriangle(drawPoint(img, points, radius, inputColor), points,
+                        triangles, inputColor);
 }
 
 // 对row*row的矩阵求解，最后一列是。。。
