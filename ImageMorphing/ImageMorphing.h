@@ -33,6 +33,7 @@ typedef std::vector<Point> Points;
 // 要求两张图大小一致，点数量一致（不包含四角）。
 Imgs deal(Img src, Points s, Img dst, Points d, int frames);
 
+// todo 不需要可见
 // 以下标形式保存三角形的三个点
 struct Triangle {
     Triangle(int i0, int i1, int i2) {
@@ -48,12 +49,18 @@ typedef std::vector<Triangle> Triangles;
 // 三角剖分。初始状态由前4个点视为四个角（顺时针或逆时针）组成。
 Triangles divide(Points);
 
-// 要求点不能重合
+// 判断点是否在三角形外接圆内。要求点不能重合
 bool inCircle(Point, Point p1, Point p2, Point p3);
 
+// 判断点是否在三角形内。
+bool inTriangle(Point, Point p1, Point p2, Point p3);
+
 // 在图上画出三角剖分结果
-Img drawTriangle(Img, Points, Triangles,
+Img drawTriangle(Img, const Points, const Triangles,
                  const unsigned char *inputColor = NULL);
+
+Img drawPoint(Img, const Points, int radius, const unsigned char *inputColor =
+        NULL);
 
 }
 

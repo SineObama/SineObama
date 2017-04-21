@@ -11,6 +11,30 @@
 
 using namespace ImageMorphing;
 
+void test_inTriangle() {
+    cimg_library::CImg<unsigned char> img(400, 400);
+    int x, y;
+    std::cin >> x >> y;
+    Point p1(x, y);
+    std::cin >> x >> y;
+    Point p2(x, y);
+    std::cin >> x >> y;
+    Point p3(x, y);
+    cimg_forXY(img, x, y)
+    {
+        if (inTriangle(Point(x, y), p1, p2, p3)) {
+            img(x, y) = 255;
+        }
+    }
+    img.display();
+}
+
+int main() {
+    test_inTriangle();
+//    Points s, d;
+//    deal(Img("1.bmp"), s, Img("2.bmp"), d, 11);
+}
+
 void test_divide() {
     int n;
     std::cin >> n;
@@ -29,29 +53,10 @@ void test_divide() {
     Triangles triangles = divide(points);
     cimg_library::CImg<unsigned char> img(width, height);
     img.fill(0);
-    drawTriangle(img, points, triangles).display();
+    drawTriangle(drawPoint(img, points, 4), points, triangles).display();
 }
 
-int main() {
-    test_divide();
-//    Points s, d;
-//    deal(Img("1.bmp"), s, Img("2.bmp"), d, 11);
-}
-
-void test_inCircle1() {
-    int x, y;
-    std::cin >> x >> y;
-    Point p0(x, y);
-    std::cin >> x >> y;
-    Point p1(x, y);
-    std::cin >> x >> y;
-    Point p2(x, y);
-    std::cin >> x >> y;
-    Point p3(x, y);
-    std::cout << inCircle(p0, p1, p2, p3);
-}
-
-void test_inCircle2() {
+void test_inCircle() {
     cimg_library::CImg<unsigned char> img(400, 400);
     int x, y;
     std::cin >> x >> y;
