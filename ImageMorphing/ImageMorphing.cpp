@@ -131,4 +131,19 @@ bool inCircle(Point p0, Point p1, Point p2, Point p3) {
     return true;
 }
 
+Img drawTriangle(Img img, Points points, Triangles triangles,
+                 const unsigned char *inputColor) {
+    static const unsigned char defaultColor[] = { 255, 255, 255 };
+    const unsigned char *color = inputColor == NULL ? defaultColor : inputColor;
+    for (Triangles::iterator it = triangles.begin(); it != triangles.end();
+            it++) {
+        for (int i = 0; i < 3; i++) {
+            Point p1 = points[it->i[i]];
+            Point p2 = points[it->i[(i + 1) % 3]];
+            img.draw_line(p1.x, p1.y, p2.x, p2.y, color);
+        }
+    }
+    return img;
+}
+
 }

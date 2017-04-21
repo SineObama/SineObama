@@ -11,6 +11,33 @@
 
 using namespace ImageMorphing;
 
+void test_divide() {
+    int n;
+    std::cin >> n;
+    Points points;
+    int width = 0, height = 0;
+    std::cin >> width >> height;
+    points.push_back(Point(0, 0));
+    points.push_back(Point(width - 1, 0));
+    points.push_back(Point(width - 1, height - 1));
+    points.push_back(Point(0, height - 1));
+    for (int i = 0; i < n; i++) {
+        int x, y;
+        std::cin >> x >> y;
+        points.push_back(Point(x, y));
+    }
+    Triangles triangles = divide(points);
+    cimg_library::CImg<unsigned char> img(width, height);
+    img.fill(0);
+    drawTriangle(img, points, triangles).display();
+}
+
+int main() {
+    test_divide();
+//    Points s, d;
+//    deal(Img("1.bmp"), s, Img("2.bmp"), d, 11);
+}
+
 void test_inCircle1() {
     int x, y;
     std::cin >> x >> y;
@@ -40,10 +67,4 @@ void test_inCircle2() {
         }
     }
     img.display();
-}
-
-int main() {
-    test_inCircle2();
-    Points s, d;
-    deal(Img("1.bmp"), s, Img("2.bmp"), d, 11);
 }
