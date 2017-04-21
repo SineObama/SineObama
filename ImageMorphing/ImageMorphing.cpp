@@ -29,8 +29,8 @@ Imgs deal(Img src, Points s, Img dst, Points d, int frames) {
     const Triangles triangles = divide(s);
 
     // 展示结果
-    drawPointAndTriangle(src, s, 4, triangles).display("三角剖分结果");
-    drawPointAndTriangle(dst, d, 4, triangles).display("对应目标图剖分");
+    drawPointAndTriangle(src, s, 4, triangles).display("三角剖分结果").save("t1.bmp");
+    drawPointAndTriangle(dst, d, 4, triangles).display("对应目标图剖分").save("t2.bmp");
 
     const int width = src.width();
     const int height = src.height();
@@ -62,7 +62,7 @@ Imgs deal(Img src, Points s, Img dst, Points d, int frames) {
 #define calc_warp(f, t) \
     Mat f##m = affineMat(t##x, t##y, f##x, f##y);\
     cimg_forXY(t##warp, x, y)\
-    {  \
+    {\
         if (inTriangle(Point(x, y), t##p0, t##p1, t##p2)) {\
             t##warp(x, y, 0, 0) = f##m[0][0] * x + f##m[0][1] * y + f##m[0][2] - x;\
             t##warp(x, y, 0, 1) = f##m[1][0] * x + f##m[1][1] * y + f##m[1][2] - y;\
@@ -77,9 +77,9 @@ Imgs deal(Img src, Points s, Img dst, Points d, int frames) {
     }  // end for (triangles)
 
     drawPointAndTriangle(src.get_warp(swarp, 1), d, 4, triangles).display(
-            "原图最终形变");
+            "原图最终形变").save("w1.bmp");
     drawPointAndTriangle(dst.get_warp(dwarp, 1), s, 4, triangles).display(
-            "目标图最初形变");
+            "目标图最初形变").save("w2.bmp");
 
     Imgs imgs;
     return imgs;

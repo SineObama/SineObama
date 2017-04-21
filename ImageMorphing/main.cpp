@@ -28,10 +28,24 @@ void test_deal() {
     int x, y;
     for (int i = 0; i < n; i++) {
         std::cin >> x >> y;
+        if (!std::cin.good()) {
+            std::cin.clear();
+            char temp[1000];
+            std::cin.getline(temp, 1000);
+            i--;
+            continue;
+        }
         s.push_back(Point(x, y));
     }
     for (int i = 0; i < n; i++) {
         std::cin >> x >> y;
+        if (!std::cin.good()) {
+            std::cin.clear();
+            char temp[1000];
+            std::cin.getline(temp, 1000);
+            i--;
+            continue;
+        }
         d.push_back(Point(x / scalex, y / scaley));
     }
 //    Img src(width, height), dst(width, height);
