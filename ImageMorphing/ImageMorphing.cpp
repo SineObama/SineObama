@@ -64,8 +64,8 @@ Imgs deal(Img src, Points s, Img dst, Points d, int frames) {
     cimg_forXY(t##warp, x, y)\
     {\
         if (inTriangle(Point(x, y), t##p0, t##p1, t##p2)) {\
-            t##warp(x, y, 0, 0) = f##m[0][0] * x + f##m[0][1] * y + f##m[0][2] - x;\
-            t##warp(x, y, 0, 1) = f##m[1][0] * x + f##m[1][1] * y + f##m[1][2] - y;\
+            f##warp(x, y, 0, 0) = x - (f##m[0][0] * x + f##m[0][1] * y + f##m[0][2]);\
+            f##warp(x, y, 0, 1) = y - (f##m[1][0] * x + f##m[1][1] * y + f##m[1][2]);\
         }\
     }
 
