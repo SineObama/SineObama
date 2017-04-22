@@ -30,10 +30,9 @@ struct Point {
 };
 typedef std::vector<Point> Points;
 
-// 要求两张图大小一致，点数量一致（不包含四角）。
+// 主函数。要求两张图大小一致，点的数量一致（不包含四角）。
 Imgs deal(Img src, Points s, Img dst, Points d, int frames);
 
-// todo 不需要可见
 // 以下标形式保存三角形的三个点
 struct Triangle {
     Triangle(int i0, int i1, int i2) {
@@ -59,9 +58,11 @@ bool inTriangle(Point, Point p1, Point p2, Point p3);
 Img drawTriangle(Img, const Points, const Triangles,
                  const unsigned char *inputColor = NULL);
 
+// 在图上以小圆的形式画点
 Img drawPoint(Img, const Points, int radius, const unsigned char *inputColor =
 NULL);
 
+// 见drawPoint和drawTriangle
 Img drawPointAndTriangle(Img, const Points, int radius, const Triangles,
                          const unsigned char *inputColor = NULL);
 

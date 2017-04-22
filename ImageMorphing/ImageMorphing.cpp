@@ -166,7 +166,7 @@ Triangles divide(Points points) {
             }
         }
 
-        // todo “优化”步骤感觉不需要
+        // todo 缺少算法中的“优化”步骤，但感觉不需要
 
         for (size_t i = 0; i < found.size(); i++)
             for (size_t j = 0; j < 3; j++)
@@ -183,6 +183,7 @@ Triangles divide(Points points) {
 #define calc_cross(a, b, c) const double cross##a##b##c = \
     (v##b##a##x * v##b##c##y - v##b##c##x * v##b##a##y)
 
+// 判断根据：圆内接四边形的角度性质。
 bool inCircle(Point p0, Point p1, Point p2, Point p3) {
 
 #define calc_len(s, d) const double len##s##d = \
@@ -227,6 +228,7 @@ bool inCircle(Point p0, Point p1, Point p2, Point p3) {
 
 }
 
+// 方法：判断目标点和三角形的每一个点，是否在三角形另外两点的直线同侧。
 bool inTriangle(Point p0, Point p1, Point p2, Point p3) {
 
 #define dcalc_v(s, d) calc_v(s, d); calc_v(d, s);
