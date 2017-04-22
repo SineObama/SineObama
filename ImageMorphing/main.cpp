@@ -77,7 +77,7 @@ int main() {
         scale(x, y, 0, 0) = x * scalex;
         scale(x, y, 0, 1) = y * scaley;
     }
-    dst.warp(scale).display("目标图拉伸后");
+    dst.warp(scale).display("目标图拉伸后", 0);
 
     // 制作和保存
     Imgs imgs = deal(src, s, dst, d, frames);

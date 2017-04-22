@@ -44,9 +44,9 @@ Imgs deal(Img src, Points s, Img dst, Points d, int frames) {
     const Triangles triangles = divide(s);
 
     // 展示结果
-    drawPointAndTriangle(src, s, 4, triangles).display("三角剖分结果").save(
+    drawPointAndTriangle(src, s, 4, triangles).display("三角剖分结果", 0).save(
             "triangulation1.bmp");
-    drawPointAndTriangle(dst, d, 4, triangles).display("对应目标图剖分").save(
+    drawPointAndTriangle(dst, d, 4, triangles).display("对应目标图剖分", 0).save(
             "triangulation2.bmp");
 
     // 计算最终的2D warping，采用逆向相对映射"backward-relative"
