@@ -69,7 +69,22 @@ void test_deal() {
         scale(x, y, 0, 1) = y * scaley;
     }
     img2.warp(scale).display("scale");
-    deal(Img("1.bmp"), s ,img2, d, 11);
+    Imgs imgs = deal(Img("1.0.bmp"), s, img2, d, 11);
+    Imgs::iterator it = imgs.begin();
+    const char *name[11] = { "1.1.bmp",
+                             "1.2.bmp",
+                             "1.3.bmp",
+                             "1.4.bmp",
+                             "1.5.bmp",
+                             "1.6.bmp",
+                             "1.7.bmp",
+                             "1.8.bmp",
+                             "1.9.bmp",
+                             "1.10.bmp",
+                             "1.11.bmp", };
+    for (int i = 0; it != imgs.end(); it++, i++)
+        it->save(name[i]);
+    img2.save("2.0.bmp");
 }
 
 int main() {

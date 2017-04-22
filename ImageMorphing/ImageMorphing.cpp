@@ -30,10 +30,12 @@ Imgs deal(Img src, Points s, Img dst, Points d, int frames) {
 
     // 展示结果
     drawPointAndTriangle(src, s, 4, triangles).display("三角剖分结果").save("t1.bmp");
-    drawPointAndTriangle(dst, d, 4, triangles).display("对应目标图剖分").save("t2.bmp");
+    drawPointAndTriangle(dst, d, 4, triangles).display("对应目标图剖分").save(
+            "t2.bmp");
 
     const int width = src.width();
     const int height = src.height();
+    const int spectrum = src.spectrum();
 
     // 计算最终的2D warping，采用逆向相对映射"backward-relative"
     Warp swarp(width, height, 1, 2);
@@ -81,7 +83,30 @@ Imgs deal(Img src, Points s, Img dst, Points d, int frames) {
     drawPointAndTriangle(dst.get_warp(dwarp, 1), s, 4, triangles).display(
             "目标图最初形变").save("w2.bmp");
 
+    // 制作中间帧
     Imgs imgs;
+    for (int i = 0; i < frames; i++) {
+        const calc_t sscale = (calc_t) (i + 1) / (frames + 1);
+        const calc_t dscale = 1 - sscale;
+        Img frame(width, height, 1, spectrum);
+        Warp swarp_cur(width, height, 1, 2);
+        Warp dwarp_cur(width, height, 1, 2);
+        cimg_forXY(swarp, x, y)
+            cimg_forC(swarp, c)
+            {
+                swarp_cur(x, y, 0, c) = swarp(x, y, 0, c) * sscale;
+                dwarp_cur(x, y, 0, c) = dwarp(x, y, 0, c) * dscale;
+            }
+        Img sWarpped = src.get_warp(swarp_cur, 1);
+        Img dWarpped = dst.get_warp(dwarp_cur, 1);
+        cimg_forXY(frame, x, y)
+            cimg_forC(frame, c)
+                frame(x, y, 0, c) = int(
+                        sWarpped(x, y, c) * dscale
+                                + dWarpped(x, y, c) * sscale);
+
+        imgs.insert(frame);
+    }
     return imgs;
 }
 
