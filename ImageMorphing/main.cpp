@@ -17,14 +17,6 @@ void test_deal() {
     Points s, d;
     const int width = 490, height = 700;
     const double scalex = (double) 323 / width, scaley = (double) 399 / height;
-    s.push_back(Point(0, 0));
-    s.push_back(Point(width - 1, 0));
-    s.push_back(Point(width - 1, height - 1));
-    s.push_back(Point(0, height - 1));
-    d.push_back(Point(0, 0));
-    d.push_back(Point(width - 1, 0));
-    d.push_back(Point(width - 1, height - 1));
-    d.push_back(Point(0, height - 1));
     int x, y;
     for (int i = 0; i < n; i++) {
         std::cin >> x >> y;
@@ -48,13 +40,6 @@ void test_deal() {
         }
         d.push_back(Point(x / scalex, y / scaley));
     }
-//    Img src(width, height), dst(width, height);
-//    cimg_forXY(src, x, y)
-//    {
-//        src(x, y) = (float) (x + y) / (width + height) * 255;
-//        dst(x, y) = (float) (x + y) / (width + height) * 255;
-//    }
-//    deal(src, s, dst, d, 11);
     Img img2(width, height, 1, 3), img("2.bmp");
     cimg_library::CImg<float> scale(width, height, 1, 2);
     cimg_forXY(img, x, y)

@@ -28,6 +28,18 @@ typedef cimg_library::CImg<calc_t> Warp;
 
 Imgs deal(Img src, Points s, Img dst, Points d, int frames) {
 
+    const int width = src.width();
+    const int height = src.height();
+    const int spectrum = src.spectrum();
+
+    Points four;  // 四个角
+    four.push_back(Point(0, 0));
+    four.push_back(Point(width - 1, 0));
+    four.push_back(Point(width - 1, height - 1));
+    four.push_back(Point(0, height - 1));
+    s.insert(s.begin(), four.begin(), four.end());
+    d.insert(d.begin(), four.begin(), four.end());
+
     // 三角剖分
     const Triangles triangles = divide(s);
 
@@ -36,10 +48,6 @@ Imgs deal(Img src, Points s, Img dst, Points d, int frames) {
             "triangulation1.bmp");
     drawPointAndTriangle(dst, d, 4, triangles).display("对应目标图剖分").save(
             "triangulation2.bmp");
-
-    const int width = src.width();
-    const int height = src.height();
-    const int spectrum = src.spectrum();
 
     // 计算最终的2D warping，采用逆向相对映射"backward-relative"
     Warp swarp(width, height, 1, 2);
@@ -64,21 +72,38 @@ Imgs deal(Img src, Points s, Img dst, Points d, int frames) {
 #undef calc_array
 #undef calc_p
 
-// todo 优化：缩小检测范围
-#define calc_warp(f, t) \
+#define update(type, op, name, i) \
+    if (type##i op (name).i)\
+        type##i = (name).i;
+#define update_point(type, op, name) \
+    update(type, op, name, x);\
+    update(type, op, name, y);
+#define update_3point(type, op, prefix) \
+    update_point(type, op, prefix##0);\
+    update_point(type, op, prefix##1);\
+    update_point(type, op, prefix##2);
+#define calc_warp(f, t) {\
     const Mat f##m = affineMat(t##x, t##y, f##x, f##y);\
-    cimg_forXY(t##warp, x, y)\
+    int maxx = 0, minx = width, maxy = 0, miny = height;\
+    update_3point(max, <, t##p);\
+    update_3point(min, >, t##p);\
+    for (int x = minx; x <= maxx; x++)\
+        for (int y = miny; y <= maxy; y++)\
     {\
         if (inTriangle(Point(x, y), t##p0, t##p1, t##p2)) {\
             f##warp(x, y, 0, 0) = x - (f##m[0][0] * x + f##m[0][1] * y + f##m[0][2]);\
             f##warp(x, y, 0, 1) = y - (f##m[1][0] * x + f##m[1][1] * y + f##m[1][2]);\
         }\
-    }
+    }\
+}
 
         calc_warp(s, d);
         calc_warp(d, s);
 
 #undef calc_warp
+#undef update_3point
+#undef update_point
+#undef update
 
     }  // end for (triangles)
 
@@ -111,6 +136,7 @@ Imgs deal(Img src, Points s, Img dst, Points d, int frames) {
 
         imgs.insert(frame);
     }
+
     return imgs;
 }
 
