@@ -8,22 +8,47 @@
 #include "ImageMorphing.h"
 #include <cmath>
 #include <iostream>
+#include <sstream>
 
 using namespace ImageMorphing;
 
-void test_deal() {
-    int n;
-    std::cin >> n;
+#define BUFFER_SIZE 1000
+
+/*
+ * 第一行输入原图和目标图文件名，以及中间帧数，用空格分离
+ * 第二行输入n表示特征点的数量
+ * 下面n行每行是原图的特征点坐标x和y，用空格分离
+ * 后面n行是对应目标图的坐标
+ *
+ * 目标图将拉伸至原图大小，再进行Image Morphing
+ * 中间结果：三角剖分保存在triangulaion.bmp中
+ *
+ * 输出图像为中间帧（不包含原图和目标图），如11帧则保存到frame1.bmp~frame11.bmp。
+ * 拉伸后的目标图保存到frame999.bmp中
+ *
+ */
+int main() {
+
+    char srcName[BUFFER_SIZE], dstName[BUFFER_SIZE];
+    int frames = 11;
+
+    std::cin >> srcName >> dstName >> frames;
+    Img src(srcName), _dst(dstName);
+    const int width = src.width(), height = src.height();
+    const double scalex = (double) _dst.width() / width;
+    const double scaley = (double) _dst.height() / height;
     Points s, d;
-    const int width = 490, height = 700;
-    const double scalex = (double) 323 / width, scaley = (double) 399 / height;
     int x, y;
+    int n;
+
+    // 读取特征数据
+    std::cin >> n;
     for (int i = 0; i < n; i++) {
         std::cin >> x >> y;
-        if (!std::cin.good()) {
+        if (!std::cin.good()) {  // 忽略读不出坐标的一行，视为注释
             std::cin.clear();
-            char temp[1000];
-            std::cin.getline(temp, 1000);
+            char temp[BUFFER_SIZE];
+            std::cin.getline(temp, BUFFER_SIZE);
             i--;
             continue;
         }
@@ -33,49 +58,36 @@ void test_deal() {
         std::cin >> x >> y;
         if (!std::cin.good()) {
             std::cin.clear();
-            char temp[1000];
-            std::cin.getline(temp, 1000);
+            char temp[BUFFER_SIZE];
+            std::cin.getline(temp, BUFFER_SIZE);
             i--;
             continue;
         }
         d.push_back(Point(x / scalex, y / scaley));
     }
-    Img img2(width, height, 1, 3), img("2.bmp");
+
+    // 拉伸目标图，相应修改特征点坐标
+    Img dst(width, height, 1, _dst.spectrum());
     cimg_library::CImg<float> scale(width, height, 1, 2);
-    cimg_forXY(img, x, y)
-    {
-        img2(x, y, 0, 0) = img(x, y, 0, 0);
-        img2(x, y, 0, 1) = img(x, y, 0, 1);
-        img2(x, y, 0, 2) = img(x, y, 0, 2);
-    }
+    cimg_forXY(_dst, x, y)
+        cimg_forC(_dst, c)
+            dst(x, y, 0, c) = _dst(x, y, 0, c);
     cimg_forXY(scale, x, y)
     {
         scale(x, y, 0, 0) = x * scalex;
         scale(x, y, 0, 1) = y * scaley;
     }
-    img2.warp(scale).display("scale");
-    Imgs imgs = deal(Img("1.0.bmp"), s, img2, d, 11);
-    Imgs::iterator it = imgs.begin();
-    const char *name[11] = { "1.1.bmp",
-                             "1.2.bmp",
-                             "1.3.bmp",
-                             "1.4.bmp",
-                             "1.5.bmp",
-                             "1.6.bmp",
-                             "1.7.bmp",
-                             "1.8.bmp",
-                             "1.9.bmp",
-                             "1.10.bmp",
-                             "1.11.bmp", };
-    for (int i = 0; it != imgs.end(); it++, i++)
-        it->save(name[i]);
-    img2.save("2.0.bmp");
-}
+    dst.warp(scale).display("目标图拉伸后");
 
-int main() {
-    test_deal();
-//    Points s, d;
-//    deal(Img("1.bmp"), s, Img("2.bmp"), d, 11);
+    // 制作和保存
+    Imgs imgs = deal(src, s, dst, d, frames);
+    Imgs::iterator it = imgs.begin();
+    for (int i = 0; it != imgs.end(); it++, i++) {
+        std::stringstream ss;
+        ss << "frame" << (i + 1) << ".bmp";
+        it->save(ss.str().c_str());
+    }
+    dst.save("frame999.bmp");
 }
 
 void test_inTriangle() {

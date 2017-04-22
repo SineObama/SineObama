@@ -107,10 +107,11 @@ Imgs deal(Img src, Points s, Img dst, Points d, int frames) {
 
     }  // end for (triangles)
 
-    drawPointAndTriangle(src.get_warp(swarp, 1), d, 4, triangles).display(
-            "原图最终形变").save("w1.bmp");
-    drawPointAndTriangle(dst.get_warp(dwarp, 1), s, 4, triangles).display(
-            "目标图最初形变").save("w2.bmp");
+    // 太丑就不展示了
+//    drawPointAndTriangle(src.get_warp(swarp, 1), d, 4, triangles).display(
+//            "原图最终形变").save("w1.bmp");
+//    drawPointAndTriangle(dst.get_warp(dwarp, 1), s, 4, triangles).display(
+//            "目标图最初形变").save("w2.bmp");
 
     // 制作中间帧
     Imgs imgs;
