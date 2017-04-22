@@ -18,8 +18,11 @@ struct Mat {
     calc_t *operator[](int i) {
         return p[i];
     }
+    const calc_t *operator[](int i) const {
+        return p[i];
+    }
 };
-Mat affineMat(int *sx, int *sy, int *dx, int *dy);
+Mat affineMat(const int *sx, const int *sy, const int *dx, const int *dy);
 
 typedef cimg_library::CImg<calc_t> Warp;
 
@@ -29,9 +32,10 @@ Imgs deal(Img src, Points s, Img dst, Points d, int frames) {
     const Triangles triangles = divide(s);
 
     // 展示结果
-    drawPointAndTriangle(src, s, 4, triangles).display("三角剖分结果").save("t1.bmp");
+    drawPointAndTriangle(src, s, 4, triangles).display("三角剖分结果").save(
+            "triangulation1.bmp");
     drawPointAndTriangle(dst, d, 4, triangles).display("对应目标图剖分").save(
-            "t2.bmp");
+            "triangulation2.bmp");
 
     const int width = src.width();
     const int height = src.height();
@@ -43,8 +47,8 @@ Imgs deal(Img src, Points s, Img dst, Points d, int frames) {
     for (Triangles::const_iterator it = triangles.begin();
             it != triangles.end(); it++) {
 
-#define calc_p(l, n) Point l##p##n = l[it->i[n]]
-#define calc_array(l, i) int l##i[3] = { (l##p##0).i, (l##p##1).i, (l##p##2).i }
+#define calc_p(l, n) const Point l##p##n = l[it->i[n]]
+#define calc_array(l, i) const int l##i[3] = { (l##p##0).i, (l##p##1).i, (l##p##2).i }
 
         calc_p(s, 0);
         calc_p(s, 1);
@@ -62,7 +66,7 @@ Imgs deal(Img src, Points s, Img dst, Points d, int frames) {
 
 // todo 优化：缩小检测范围
 #define calc_warp(f, t) \
-    Mat f##m = affineMat(t##x, t##y, f##x, f##y);\
+    const Mat f##m = affineMat(t##x, t##y, f##x, f##y);\
     cimg_forXY(t##warp, x, y)\
     {\
         if (inTriangle(Point(x, y), t##p0, t##p1, t##p2)) {\
@@ -321,7 +325,7 @@ void solve(double **m, const int row, const int column) {
 }
 
 // 输入3对点，算出仿射变换矩阵
-Mat affineMat(int *sx, int *sy, int *dx, int *dy) {
+Mat affineMat(const int *sx, const int *sy, const int *dx, const int *dy) {
     Mat mat;
     double mm[3][4] = { };
     double *m[] = { mm[0], mm[1], mm[2] };

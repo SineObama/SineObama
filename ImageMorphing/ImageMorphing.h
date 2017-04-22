@@ -23,9 +23,6 @@ struct Point {
             : x(x),
               y(y) {
     }
-    float operator*(Point o) {
-        return x * o.x + y * o.y;
-    }
     int x, y;
 };
 typedef std::vector<Point> Points;
