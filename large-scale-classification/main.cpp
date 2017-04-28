@@ -13,7 +13,6 @@
 
 #define n 201  // # features
 #define BUFFER_SIZE 1000
-#define FORMAT "f"
 
 typedef SVM::data_t data_t;
 
@@ -29,8 +28,8 @@ int iterations = 1000;
 
 void readParam(int argc, char **argv);
 void outputUsageAndExit() {
-    cout << "Usage 1: -train training_set_file model_file iterations [start_line] [length] \n";
-    cout << "Usage 2: -predict test_file model_file output_file [start_line] [length]\n";
+    cout << "Usage 1: -train    train_file  model_file  iterations   [start_line]    [length]\n";
+    cout << "Usage 2: -predict  test_file   model_file  output_file  [start_line]    [length]\n";
     exit(1);
 }
 int readFile(const char *filename, data_t **yx, const int start, const int len);
@@ -45,8 +44,6 @@ int main(int argc, char **argv) {
     static const data_t C = 0.09;
     setbuf(stdout, NULL);
 
-    data_t *bw = new data_t[n + 1];
-    memset(bw, 0, sizeof(data_t) * (n + 1));
     data_t **yx = new data_t*[size];
     for (int i = 0; i < size; i++) {
         yx[i] = new data_t[n + 1];
@@ -59,72 +56,22 @@ int main(int argc, char **argv) {
 
     if (type == 1) {
 
-        SVM::train(yx, len, n, C, bw, iterations);
+        SVM svm(n);
+        svm.train(yx, len, C, iterations, modelFilename);
         cout << "<" << iterations << "> iterations train finish\n";
-
-        data_t J = 0;
-        for (int j = 0; j < n + 1; j++)
-            J += bw[j] * bw[j];
-        J /= 2;
-        for (int i = 0; i < len; i++) {
-            data_t wx = bw[0];
-            for (int j = 1; j < n + 1; j++)
-                wx += bw[j] * yx[i][j];
-            J += C * (1 - yx[i][0] * wx);
-        }
-
-        FILE *pFile = fopen(modelFilename, "w");
-        fprintf(pFile, "J=%"FORMAT"\n", J);
-        for (int i = 0; i < n + 1; i++)
-            fprintf(pFile, "%"FORMAT"\n", bw[i]);
-        fclose(pFile);
         cout << "model saved in <" << modelFilename << ">\n";
 
     } else if (type == 2) {
 
-        FILE *pFile = fopen(modelFilename, "r");
-        fscanf(pFile, "J=%*"FORMAT"\n");
-        for (int i = 0; i < n + 1; i++)
-            fscanf(pFile, "%"FORMAT, &bw[i]);
-        fclose(pFile);
-
-        data_t *y = new data_t[len];
-        for (int i = 0; i < len; i++)
-            y[i] = yx[i][0];
-
-        SVM::predict(yx, len, n, bw);
+        SVM svm(modelFilename);
+        svm.predict(yx, len, outputFilename);
         cout << "predict finish\n";
-
-        int count = 0;
-        for (int i = 0; i < len; i++)
-            if (y[i] * yx[i][0] > 0)
-                count++;
-        data_t correct = (float) count / len * 100;
-        cout << correct << "% correct\n";
-        delete[] y;
-
-//        ss << modelFilename << "__" << dataFilename << "_" << start << "_"
-//           << len << "__" << correct << "%.o";
-        pFile = fopen(outputFilename, "w");
-        fprintf(pFile, "id,label,correctness=%.2"FORMAT"%%\n", correct);
-        for (int i = 0; i < len; i++) {
-            if (yx[i][0] < -1)
-                yx[i][0] = 0;
-            else if (yx[i][0] > 1)
-                yx[i][0] = 1;
-            else
-                yx[i][0] = (yx[i][0] + 1) / 2;
-            fprintf(pFile, "%d,%"FORMAT"\n", i, yx[i][0]);
-        }
-        fclose(pFile);
         cout << "result saved in <" << outputFilename << ">\n";
-
     }
 
     for (int i = 0; i < size; i++)
         delete[] yx[i];
     delete[] yx;
-    delete[] bw;
 
 }
 
