@@ -30,7 +30,7 @@ class SVM {
 
     ~SVM();
 
-    void train(const data_t * const *yx, const size_t l, const data_t C,
+    void train(data_t **yx, const size_t l, const data_t C,
                const size_t iterations, const char *modelFile);
     void predict(const data_t * const *yx, const size_t l,
                  const char *outputFile);

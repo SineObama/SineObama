@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
     if (type == 0)
         outputUsageAndExit();
 
-    static const data_t C = 0.09;
+    static const data_t C = 0.5;
     setbuf(stdout, NULL);
 
     data_t **yx = new data_t*[size];

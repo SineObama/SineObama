@@ -55,10 +55,11 @@ SVM::~SVM() {
     delete[] width;
 }
 
-void SVM::train(const data_t * const *yx, const size_t l, const data_t C,
+void SVM::train(data_t **yx, const size_t l, const data_t C,
                 const size_t iterations, const char *modelFile) {
 
     // scaling
+
     if (min == NULL) {
         data_t *max = new data_t[n + 1];
         min = new data_t[n + 1];
@@ -78,6 +79,9 @@ void SVM::train(const data_t * const *yx, const size_t l, const data_t C,
         }
         delete[] max;
     }
+    for (size_t j = 1; j < n + 1; j++)
+        for (size_t i = 0; i < l; i++)
+            yx[i][j] = (yx[i][j] - min[j]) / width[j];
 
     // Linear SVM
 
@@ -152,17 +156,17 @@ void SVM::train(const data_t * const *yx, const size_t l, const data_t C,
     fprintf(pFile, "n,%d\n", n);
     // line 4
     fprintf(pFile, "bw,");
-    for (size_t i = 0; i < n + 1; i++)
+    for (size_t i = 0; i < n; i++)
         fprintf(pFile, "%"FORMAT",", bw[i]);
     fprintf(pFile, "%"FORMAT"\n", bw[n]);
     // line 5
     fprintf(pFile, "min,");
-    for (size_t i = 0; i < n + 1; i++)
+    for (size_t i = 0; i < n; i++)
         fprintf(pFile, "%"FORMAT",", min[i]);
     fprintf(pFile, "%"FORMAT"\n", min[n]);
     // line 6
     fprintf(pFile, "width,");
-    for (size_t i = 0; i < n + 1; i++)
+    for (size_t i = 0; i < n; i++)
         fprintf(pFile, "%"FORMAT",", width[i]);
     fprintf(pFile, "%"FORMAT"\n", width[n]);
     fclose(pFile);
@@ -176,7 +180,7 @@ void SVM::predict(const data_t * const *yx, const size_t l,
     for (size_t i = 0; i < l; i++) {
         data_t wx = bw[0];
         for (size_t j = 1; j < n + 1; j++)
-            wx += bw[j] * yx[i][j];
+            wx += bw[j] * ((yx[i][j] - min[j]) / width[j]);
         y[i] = wx;
     }
 
