@@ -136,10 +136,10 @@ void SVM::train(data_t **yx, const size_t l, const data_t C,
     // 保存
 
     // 计算估价函数？
-    data_t J = 0;
+    data_t J = 0.0f;
     for (size_t j = 0; j < n + 1; j++)
         J += bw[j] * bw[j];
-    J /= 2;
+    J /= 2.0f;
     for (size_t i = 0; i < l; i++) {
         data_t wx = bw[0];
         for (size_t j = 1; j < n + 1; j++)
@@ -189,7 +189,7 @@ void SVM::predict(const data_t * const *yx, const size_t l,
     for (size_t i = 0; i < l; i++)
         if (y[i] * yx[i][0] > 0)
             count++;
-    data_t correct = (data_t) count / l * 100;
+    data_t correct = (data_t) count / l * 100.0f;
     std::cout << correct << "% correct\n";
 
     // 保存到文件
