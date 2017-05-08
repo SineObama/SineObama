@@ -135,23 +135,23 @@ void SVM::train(data_t **yx, const size_t l, const data_t C,
 
     // 保存
 
-    // 计算估价函数？
-    data_t J = 0.0f;
-    for (size_t j = 0; j < n + 1; j++)
-        J += bw[j] * bw[j];
-    J /= 2.0f;
+    // 计算objective value
+    data_t v = 0.0f;
+    for (size_t j = 1; j < n + 1; j++)
+        v += bw[j] * bw[j];
+    v *= 0.5f;
     for (size_t i = 0; i < l; i++) {
         data_t wx = bw[0];
         for (size_t j = 1; j < n + 1; j++)
             wx += bw[j] * yx[i][j];
-        J += C * (1 - yx[i][0] * wx);
+        v += C * (1 - yx[i][0] * wx);
     }
 
     FILE *pFile = fopen(modelFile, "w");
     // line 1
     fprintf(pFile, "%s,%s\n", "version", VERSION);
     // line 2
-    fprintf(pFile, "J,%"FORMAT"\n", J);
+    fprintf(pFile, "v,%"FORMAT"\n", v);
     // line 3
     fprintf(pFile, "n,%d\n", n);
     // line 4
