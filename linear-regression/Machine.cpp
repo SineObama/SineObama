@@ -5,6 +5,9 @@
  *      Author: Sine
  */
 
+//#include "stdafx.h"
+//#define USE_VS
+
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
@@ -17,12 +20,21 @@
 
 using namespace std;
 
+#ifdef USE_VS
+#define print(sys, args, ...) {\
+GetLocalTime(&sys);\
+printf("%02d/%02d %02d:%02d:%02d.%03d\t", sys.wMonth, sys.wDay, sys.wHour,\
+       sys.wMinute, sys.wSecond, sys.wMilliseconds);\
+printf(args, __VA_ARGS__);\
+printf("\n");}
+#else
 #define print(sys, args...) {\
 GetLocalTime(&sys);\
 printf("%02d/%02d %02d:%02d:%02d.%03d\t", sys.wMonth, sys.wDay, sys.wHour,\
        sys.wMinute, sys.wSecond, sys.wMilliseconds);\
 printf(args);\
 printf("\n");}
+#endif
 #define compute_theta(theta, item, alpha) \
 for (size_t j = 0; j < n + 1; j++) {\
     data_t sum = 0;\
@@ -44,15 +56,24 @@ for (size_t i = 0; i < m; i++) {\
     J += item[i] * item[i];\
 }\
 J /= 2 * m;
+
+#ifdef USE_VS
+#define fscanf fscanf_s
+#define sprintf sprintf_s
+#define fopen(args, ...) NULL; fopen_s(&pFile, args, __VA_ARGS__)
+#endif
+#define my_fscanf()
+
 // 输入特征数（列数）n
 Machine::Machine(size_t n, const char *filename)
-        : n(n) {
+    : n(n) {
     theta = new data_t[n + 1];
     if (filename == NULL) {
         memset(theta, 0, sizeof(data_t) * (n + 1));
         min = NULL;
         gap = NULL;
-    } else {
+    }
+    else {
         FILE *pFile = fopen(filename, "r");
         fscanf(pFile, "%lf", &theta[0]);
         for (size_t j = 1; j < n + 1; j++)
@@ -121,10 +142,12 @@ void Machine::learn(const char *trainFile, const char *thetaFilePrefix,
     print(sys, "finish reading train");
     print(sys, "begin training");
 
+// something using this were commented
 //#define CHANGE
 
     data_t * const temp_item = new data_t[m];
     data_t * const temp_theta = new data_t[n + 1];
+    memset(temp_theta, 0, sizeof(data_t) * (n + 1));
     data_t temp_J = 0;
 #ifdef CHANGE
     static const data_t smaller = 0.98;
@@ -167,7 +190,7 @@ void Machine::learn(const char *trainFile, const char *thetaFilePrefix,
                     if (temp_J > min_J) {
                         narrow = 1 - (J - min_J) / J / 2;
                         print(sys, "\n\nkeep alpha=%lf\tnarrow=%le", alpha,
-                                narrow);
+                              narrow);
                         t--;
                         continue;
                     }
@@ -183,7 +206,7 @@ void Machine::learn(const char *trainFile, const char *thetaFilePrefix,
                         narrow = 1 - (J - min_J) / J / 2;
                         temp_alpha /= scale;
                         print(sys, "\n\nback alpha=%lf\tnarrow=%.12le",
-                                temp_alpha, narrow);
+                              temp_alpha, narrow);
                         break;
                     }
                     min_J = temp_J;
@@ -201,20 +224,20 @@ void Machine::learn(const char *trainFile, const char *thetaFilePrefix,
             memcpy(theta, temp_theta, sizeof(data_t) * (n + 1));
             J = temp_J;
             // output info
-            comp_t new_completion = (comp_t) (t + 1) / times;
+            comp_t new_completion = (comp_t)(t + 1) / times;
             if (new_completion - completion
-                    >= completion_gap - completion_precision) {
+                >= completion_gap - completion_precision) {
                 completion = new_completion;
                 print(sys, "%.1f%%\tJ=%.12le\talpha=%lf",
-#ifdef CHANGE
-                      "\tnarrow=%le",
-#endif
+//#ifdef CHANGE
+//                      "\tnarrow=%le",
+//#endif
                       completion * 100, temp_J, alpha
-#ifdef CHANGE
-                      ,
-                      narrow
-#endif
-                      );
+//#ifdef CHANGE
+//                      ,
+//                      narrow
+//#endif
+                );
             }
         }
         delete[] item;
@@ -233,18 +256,18 @@ fprintf(pFile, format"\n", array[(len) - 1]);
         csvfprint(pFile, "%lf", gap, n + 1);
 #undef csvfprint
         fclose(pFile);
-        char str[100] = { };
+        char str[100] = {};
         sprintf(str, "J=%.12le,alpha=%lf", J, alpha);
         stringstream ss;
         ss << (string("move ") + cache_filename + " \"" + thetaFilePrefix)
-           << str << "x" << (count + 1) << "x" << times << postfix << "\"";
+            << str << "x" << (count + 1) << "x" << times << postfix << "\"";
         system(ss.str().c_str());
         cout << "finish writing " << (count + 1) << endl;
 #ifndef CHANGE
         if (stopped)
             break;
 #endif
-    }
+            }
 #ifdef CHANGE
     delete[] temp_theta;
     delete[] temp_item;
@@ -256,7 +279,7 @@ fprintf(pFile, format"\n", array[(len) - 1]);
     for (size_t i = 0; i < m; i++)
         delete[] train[i];
     delete[] train;
-}
+        }
 
 void Machine::guess(const char *testFilename, const char *output) {
 

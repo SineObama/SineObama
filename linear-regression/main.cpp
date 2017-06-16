@@ -25,5 +25,5 @@ int main(int argc, char **argv) {
 
     // machine learning
     Machine machine(n, thetaFilename);
-    machine.learn(argv[1], "theta", 100, 100, 0.075);
+    machine.learn(argv[1], "theta", 1, 10, 0.075);
 }
