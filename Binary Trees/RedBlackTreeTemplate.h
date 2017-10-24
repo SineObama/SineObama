@@ -439,12 +439,11 @@ int RedBlackTree<Entry>::inorderTestForBlackTheory(NodePtr cur, int &found) {
 
 template<class Entry>
 void RedBlackTree<Entry>::inorderPrint(std::vector<std::stringstream *> &v,
-                                       const Node *_root, int n) {
+                                       const Node *_root, size_t n) {
     if (!_root)
         return;
-    if (v.size() <= n) {
+    if (v.size() <= n)
         v.push_back(new std::stringstream());
-    }
     inorderPrint(v, _root->child[0], n + 1);
     (*v[n]) << ' ' << _root->data << (_root->color == red ? "r" : "");
     inorderPrint(v, _root->child[1], n + 1);

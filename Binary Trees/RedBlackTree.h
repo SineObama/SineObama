@@ -83,7 +83,7 @@ class RedBlackTree {
     int inorderTestForBlackTheory(NodePtr, int &);
 
     static void inorderPrint(std::vector<std::stringstream *> &, const Node *,
-                             int);
+                             size_t);
 
     NodePtr root;
 
